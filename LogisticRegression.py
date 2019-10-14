@@ -24,7 +24,7 @@ class LogisticRegression :
                     if not provided it is inferred when calling fit (might give prblems when not all classes are in fit target y)
         adaptive_learning_rate: decides how to treat learning rate
                                 if set to 'const' get cont. learning rate
-                                if set to 'decay', 'momentum' use respectivly schemes for adaptive learning rate
+                                if set to 'decay' use adaptive learning rate
                                 provide own function which takes inital learning_rate and time_step t as argument
         max_iter, tol sets maximal #iterations and minimal change of weights beta in sgd
         logging: if True keep log of all updates
@@ -56,7 +56,7 @@ class LogisticRegression :
         y_one_hot = LogisticRegression.__one_hot(self, y)
         self.beta = np.zeros((X.shape()[1], self.classes)) # initialization?
         #sgd
-
+        
         #evaluate
         score = LogisticRegression.evaluate(self, X, y, data_set="train")
         return score
@@ -88,10 +88,8 @@ class LogisticRegression :
         return scores
 
     #functions for adaptive learning rate
-    def __decay(self,gamma0, t):
-        pass
-    def __momentum(self,gamma0, t):
-        pass
+    def __decay(self, gamma0, t):
+        return gamma0 / ( gamma0*t +1)
     
     #Cross entropy function
     def __cross_entropy(self, prediction, y):
@@ -120,7 +118,7 @@ class LogisticRegression :
             hot[i, index] = 1
         return hot 
 
-    #MSE; R2 with multiclass
+    #MSE; R2; accuracy
     def __MSE(self, prediction, y):
         res = prediction -y
         res = res.sum()
