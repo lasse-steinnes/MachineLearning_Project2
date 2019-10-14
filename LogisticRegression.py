@@ -49,40 +49,45 @@ class LogisticRegression :
         self.log = logging
         if logging:
             self.logs = pd.DataFrame(columns=["Fit nr", "data set", "mse", "r2", "accuracy"])
+            self.__log_calls = 0
 
     def fit(self, X, y, batch_size = 10):
         self.__fit_count += 1
         #convert to one hot encoding 
-        y_one_hot = LogisticRegression.__one_hot(self, y)
-        self.beta = np.zeros((X.shape()[1], self.classes)) # initialization?
+        y_one_hot = LogisticRegression.__one_hot_encoding(self, y)
+        self.beta = np.zeros((X.shape[1], self.classes)) # initialization?
+        #self.beta = 0.001*np.random.randn(X.shape[1]* self.classes).reshape((X.shape[1], self.classes))  # initialization?
         #sgd
-        
+
         #evaluate
         score = LogisticRegression.evaluate(self, X, y, data_set="train")
         return score
 
-    def predict(self, X):
+    def predict(self, X, decoded = False):
         z = X@self.beta
         #softmax function
-        nom = 1 + np.sum( np.exp(z))
-        return np.exp(z) / nom
+        nom = 1 + np.sum( np.exp(z[:,:-1]))
+        p = np.exp(z[:,:-1]) / nom
+        ret = np.zeros(z.shape)
+        ret[:, :-1] = p
+        ret [:, -1] = 1- np.sum(p, axis=1)
+        if decoded:
+            return LogisticRegression.__one_hot_decoding(self, ret)
+        return ret
 
     def evaluate(self, X, y, data_set= "test"):
         prediction = LogisticRegression.predict(self, X)
-        l_y = len(y)
-        pred_class = np.zeros(l_y)
-        #decode one hot encoding of prediction
-        for i in range(l_y):
-            pred_class[i] = self.one_hot_decoding[np.argmax(prediction[i])]   
+        
+        pred_class = LogisticRegression.__one_hot_decoding(self, prediction)
 
         scores = {'mse' : LogisticRegression.__MSE(self,pred_class, y),
                   'r2': LogisticRegression.__R2(self,pred_class, y),
                   'accuracy': LogisticRegression.__accuracy(self,pred_class, y)}
-        
         if self.log:
             #log information
-            temp = pd.DataFrame(scores.update({"Fit nr": self.__fit_count, "data set": data_set}))
+            temp = pd.DataFrame(dict({"Fit nr": self.__fit_count, "data set": data_set},**scores), index=[self.__log_calls])
             self.logs = self.logs.append(temp)
+            self.__log_calls += 1
             del temp
 
         return scores
@@ -95,7 +100,7 @@ class LogisticRegression :
     def __cross_entropy(self, prediction, y):
         return - np.sum(y @ np.log(prediction.T))
 
-    def __one_hot(self, y):
+    def __one_hot_encoding(self, y):
         """
         computes the one hot encding for the vector y
         returns y in shape (samples, #unique instances)
@@ -118,18 +123,26 @@ class LogisticRegression :
             hot[i, index] = 1
         return hot 
 
+    def __one_hot_decoding(self, y):
+        """
+        decode one hot encoding of prediction
+        """
+        l_y = len(y)
+        pred_class = np.zeros(l_y)
+       
+        for i in range(l_y):
+            pred_class[i] = self.one_hot_decoding[np.argmax(y[i])] 
+        return pred_class
+
     #MSE; R2; accuracy
     def __MSE(self, prediction, y):
         res = prediction -y
-        res = res.sum()
-        return res.T@res/len(res)
+        return np.dot(res,res)/len(res)
 
     def __R2(self, prediction, y):
         res_den = prediction -y
-        res_den = res_den.sum()
         res_nom = y - np.mean(y)
-        res_nom = res_nom.sum()
-        return 1 - res_den.T@res_den / res_nom.T@res_nom
+        return 1 - np.dot(res_den,res_den) / np.dot(res_nom, res_nom)
 
     def __accuracy(self, prediction, y):
         mask = prediction == y

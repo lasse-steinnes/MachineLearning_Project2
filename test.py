@@ -1,7 +1,9 @@
 import pandas as pd 
 import numpy as np 
+from sklearn.model_selection import train_test_split
 
 from helper_functions import one_hot, model
+import LogisticRegression as lr
 
 filename = "default of credit card clients.xls"
 df = pd.read_excel(filename, header=1)
@@ -26,3 +28,16 @@ def test_model():
     X = model(x,1)
     assert np.all( X.shape == df.shape)
     assert np.all( X[:,0] - 1 == 0 )
+
+def test_logistic():
+    X = model(df.drop(columns =["default payment next month"]).to_numpy(),1)
+    y = df["default payment next month"].to_numpy()
+
+    X_trian, X_test, y_train, y_test = train_test_split(X,y,)
+    clf = lr.LogisticRegression(logging = True)
+    clf.fit(X_trian,y_train)
+    clf.evaluate(X_test,y_test)
+    print(clf.logs)
+    print(y_test[-5:],clf.predict(X_test[-5:], decoded=True))
+
+test_logistic()
