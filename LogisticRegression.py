@@ -18,7 +18,7 @@ class LogisticRegression :
     """
     def __init__(self, classes = 2, learning_rate = 0.01, adaptive_learning_rate = 'const', max_iter=5000, tol = 1e-7, logging = False):
         """
-        classes: #of predicted classes
+        classes: #predicted classes
         adaptive_learning_rate: decides how to treat learning rate
                                 if set to 'const' get cont. learning rate
                                 if set to 'decay', 'momentum' use respectivly schemes for adaptive learning rate
