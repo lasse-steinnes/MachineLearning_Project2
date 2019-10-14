@@ -6,8 +6,12 @@ def model(data, power):
     creat the design matrix of data to given power
     currently just linear!
     """
-    ones = np.ones(data.shape()[0])
-    return np.vstack(ones, data)
+    samples, features = data.shape
+    ones = np.ones(samples)
+    ret = np.zeros((features + 1, samples))
+    ret[0] = ones
+    ret [1:] = data.T
+    return ret.T
 
 def one_hot(y):
     """
@@ -36,7 +40,7 @@ def parse_data(df, target, power = 1):
     function which parses a pandas data frame to a polynomial model X of power 
     and a one_hot encoded target y for logistic regression including a dict for translation
     """
-    pre_X = df.drop(target).to_numpy
+    pre_X = df.drop(columns= [target]).to_numpy()
     pre_y = df[target].to_numpy()
 
     X = model(pre_X, power)
