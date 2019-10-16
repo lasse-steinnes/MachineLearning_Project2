@@ -39,5 +39,6 @@ def test_logistic():
     clf.evaluate(X_test,y_test)
     print(clf.logs)
     print(y_test[-5:],clf.predict(X_test[-5:], decoded=True))
+    print(clf.confusion_matrix(X_test,y_test), len(y_test))
 
 test_logistic()

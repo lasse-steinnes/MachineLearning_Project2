@@ -31,8 +31,8 @@ class LogisticRegression :
         """
         self.classes = classes
         if class_dict != None:
-            self.one_hot_encoding = class_dict
-            self.one_hot_decoding = {index: value for index, value in class_dict.item()}
+            self.one_hot_encoding_key = class_dict
+            self.one_hot_decoding_key = {index: value for index, value in class_dict.item()}
             self.__provided_dict =True
         else:
             self.__provided_dict =False
@@ -56,7 +56,7 @@ class LogisticRegression :
         #convert to one hot encoding 
         y_one_hot = LogisticRegression.__one_hot_encoding(self, y)
         self.beta = np.zeros((X.shape[1], self.classes)) # initialization?
-        #self.beta = 0.001*np.random.randn(X.shape[1]* self.classes).reshape((X.shape[1], self.classes))  # initialization?
+        self.beta = 0.001*np.random.randn(X.shape[1]* self.classes).reshape((X.shape[1], self.classes))  # initialization?
         #sgd
 
         #evaluate
@@ -66,14 +66,11 @@ class LogisticRegression :
     def predict(self, X, decoded = False):
         z = X@self.beta
         #softmax function
-        nom = 1 + np.sum( np.exp(z[:,:-1]))
-        p = np.exp(z[:,:-1]) / nom
-        ret = np.zeros(z.shape)
-        ret[:, :-1] = p
-        ret [:, -1] = 1- np.sum(p, axis=1)
+        nom = np.sum( np.exp(z))
+        p = np.exp(z) / nom
         if decoded:
-            return LogisticRegression.__one_hot_decoding(self, ret)
-        return ret
+            return LogisticRegression.__one_hot_decoding(self, p)
+        return p
 
     def evaluate(self, X, y, data_set= "test"):
         prediction = LogisticRegression.predict(self, X)
@@ -92,13 +89,54 @@ class LogisticRegression :
 
         return scores
 
+    def confusion_matrix(self, X, y):
+        """
+        returns the confusion matrix, i.e. number of true positives and flase negatives for all classes
+        """
+        prediction = LogisticRegression.predict(self, X)
+        prediction = LogisticRegression.__one_hot_decoding(self, prediction)
+        
+        list_of_classes = np.array(list(self.one_hot_encoding_key))
+        list_of_classes = list_of_classes[:,np.newaxis]
+
+        matrix = np.zeros( (self.classes, self.classes))
+        for i, value in enumerate(self.one_hot_encoding_key):
+            mask = prediction == value
+            true_class = y[mask]
+            matrix[i] = np.sum(true_class == list_of_classes, axis=1)
+
+        tp = np.diag(matrix)
+        fp = np.sum(matrix,axis=1) - tp
+        fn = np.sum(matrix, axis=0) -tp
+        tn = np.sum(matrix) - tp -fp -fn
+        P = tp /(tp + fp)
+        R = tp /(tp + fn)
+        S = tn /(tn + fp)
+        A = (tp +tn) / (tp + tn + fp +fn)
+        
+        metrics = [P,R,S,A]
+
+        input_df = np.zeros( (self.classes, self.classes +4))
+        input_df[:,:self.classes] = matrix
+        for i, val in enumerate(metrics):
+            input_df[:,-4 + i] = val
+
+        confusion = pd.DataFrame(input_df,
+                                 columns = np.append([ str(self.one_hot_decoding_key[i]) for i in range(self.classes)], ["precision", "recall", "specificity", "accuracy"]),
+                                 index = [self.one_hot_decoding_key[i] for i in range(self.classes)])
+        confusion.index.name = 'predicted class'
+        confusion.columns.name = 'actual class'
+        return confusion
+
+
+
     #functions for adaptive learning rate
     def __decay(self, gamma0, t):
         return gamma0 / ( gamma0*t +1)
     
     #Cross entropy function
     def __cross_entropy(self, prediction, y):
-        return - np.sum(y @ np.log(prediction.T))
+        return - np.sum(y @ np.log(prediction.T))/len(y)
 
     def __one_hot_encoding(self, y):
         """
@@ -115,11 +153,11 @@ class LogisticRegression :
         #inferr dict only at first call otherwise it is provided from class
 
         if (self.__fit_count == 1) and not self.__provided_dict:
-            self.one_hot_encoding = {uni[i]: i for i in range(l_uni)}
-            self.one_hot_decoding = {i:uni[i] for i in range(l_uni)}
+            self.one_hot_encoding_key = {uni[i]: i for i in range(l_uni)}
+            self.one_hot_decoding_key = {i:uni[i] for i in range(l_uni)}
             
         for i in range(l_y):
-            index  = self.one_hot_encoding[y[i]]
+            index  = self.one_hot_encoding_key[y[i]]
             hot[i, index] = 1
         return hot 
 
@@ -131,7 +169,7 @@ class LogisticRegression :
         pred_class = np.zeros(l_y)
        
         for i in range(l_y):
-            pred_class[i] = self.one_hot_decoding[np.argmax(y[i])] 
+            pred_class[i] = self.one_hot_decoding_key[np.argmax(y[i])] 
         return pred_class
 
     #MSE; R2; accuracy
