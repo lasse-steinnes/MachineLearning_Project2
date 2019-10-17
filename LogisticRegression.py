@@ -56,7 +56,7 @@ class LogisticRegression :
         #convert to one hot encoding 
         y_one_hot = LogisticRegression.__one_hot_encoding(self, y)
         self.beta = np.zeros((X.shape[1], self.classes)) # initialization?
-        self.beta = 0.001*np.random.randn(X.shape[1]* self.classes).reshape((X.shape[1], self.classes))  # initialization?
+        self.beta = 10**(-6)*np.random.randn(X.shape[1]* self.classes).reshape((X.shape[1], self.classes))  # initialization?
         #sgd
 
         #evaluate

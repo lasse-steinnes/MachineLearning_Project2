@@ -32,13 +32,14 @@ def test_model():
 def test_logistic():
     X = model(df.drop(columns =["default payment next month"]).to_numpy(),1)
     y = df["default payment next month"].to_numpy()
-
+    N = len(y)
+    print("N = "+str(N)+"; 0: %.2f; 1: %.2f" % tuple(np.bincount(y)/N))
     X_trian, X_test, y_train, y_test = train_test_split(X,y,)
     clf = lr.LogisticRegression(logging = True)
     clf.fit(X_trian,y_train)
     clf.evaluate(X_test,y_test)
     print(clf.logs)
     print(y_test[-5:],clf.predict(X_test[-5:], decoded=True))
-    print(clf.confusion_matrix(X_test,y_test), len(y_test))
+    print(clf.confusion_matrix(X_test,y_test))
 
 test_logistic()
