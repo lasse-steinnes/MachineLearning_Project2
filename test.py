@@ -1,8 +1,9 @@
 import pandas as pd 
 import numpy as np 
 from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
 
-from helper_functions import one_hot, model
+from helper_functions import parse_data
 import LogisticRegression as lr
 
 filename = "default of credit card clients.xls"
@@ -30,12 +31,11 @@ def test_model():
     assert np.all( X[:,0] - 1 == 0 )
 
 def test_logistic():
-    X = model(df.drop(columns =["default payment next month"]).to_numpy(),1)
-    y = df["default payment next month"].to_numpy()
+    X, y = parse_data(df, "default payment next month" )
     N = len(y)
     print("N = "+str(N)+"; 0: %.2f; 1: %.2f" % tuple(np.bincount(y)/N))
-    X_trian, X_test, y_train, y_test = train_test_split(X,y,)
-    clf = lr.LogisticRegression(logging = True)
+    X_trian, X_test, y_train, y_test = train_test_split(X,y, test_size =0.2)
+    clf = lr.LogisticRegression(max_iter = 10**4, mini_batch_size=30, epochs = 100, learning_rate=1, adaptive_learning_rate='const', logging = True)
     clf.fit(X_trian,y_train)
     clf.evaluate(X_test,y_test)
     print(clf.logs)
@@ -43,3 +43,9 @@ def test_logistic():
     print(clf.confusion_matrix(X_test,y_test))
 
 test_logistic()
+
+clf  = LogisticRegression( )
+X, y = parse_data(df, "default payment next month" )
+X_trian, X_test, y_train, y_test = train_test_split(X,y, test_size =0.2)
+clf.fit(X_trian, y_train)
+print(clf.score(X_test, y_test))

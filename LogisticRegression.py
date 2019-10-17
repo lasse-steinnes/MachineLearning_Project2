@@ -1,7 +1,8 @@
-import numpy as np
-import pandas as pd
+import autograd.numpy as np
+import pandas as pd 
+from SGD import SGD
 
-class LogisticRegression :
+class LogisticRegression (SGD):
     """
     class that performs logistic regression with n classes to classify
     Methods:
@@ -17,7 +18,8 @@ class LogisticRegression :
 
 
     """
-    def __init__(self, classes = 2, class_dict = None, learning_rate = 0.01, adaptive_learning_rate = 'const', max_iter=5000, tol = 1e-7, logging = False):
+    def __init__(self, classes = 2, class_dict = None, learning_rate = 0.01, adaptive_learning_rate = 'const',
+                 epochs = 10, mini_batch_size=10, max_iter=5000, tol = 1e-7, logging = False):
         """
         classes: #predicted classes
         class_dict: provide a dictonary which encodes the on hot mapping {value: index}
@@ -32,39 +34,42 @@ class LogisticRegression :
         self.classes = classes
         if class_dict != None:
             self.one_hot_encoding_key = class_dict
-            self.one_hot_decoding_key = {index: value for index, value in class_dict.item()}
+            self.one_hot_decoding_key = {index: value for index, value in class_dict.items()}
             self.__provided_dict =True
         else:
             self.__provided_dict =False
-
-        self.max_iter = max_iter
-        self.tol = tol
-        self.gamma = learning_rate        
-        try:
-            self.learning_rate_adaption = {'const': False, 'decay': LogisticRegression.__decay, 'momentum': LogisticRegression.__momentum}
-        except:
-            self.learning_rate_adaption = adaptive_learning_rate
-        
+      
+        SGD.__init__(self, LogisticRegression.__cross_entropy, epochs =epochs, mini_batch_size = mini_batch_size,
+                     learning_rate = learning_rate, adaptive_learning_rate = adaptive_learning_rate, tolerance = tol, max_iter = max_iter)
         self.__fit_count = 0
         self.log = logging
         if logging:
-            self.logs = pd.DataFrame(columns=["Fit nr", "data set", "mse", "r2", "accuracy"])
+            self. epochs = 1
+            self.log_epochs = epochs
+            self.logs = pd.DataFrame(columns=["Fit nr","epoch", "data set", "mse", "r2", "accuracy"])
             self.__log_calls = 0
 
-    def fit(self, X, y, batch_size = 10):
+    def fit(self, X, y):
         self.__fit_count += 1
         #convert to one hot encoding 
         y_one_hot = LogisticRegression.__one_hot_encoding(self, y)
-        self.beta = np.zeros((X.shape[1], self.classes)) # initialization?
-        self.beta = 10**(-6)*np.random.randn(X.shape[1]* self.classes).reshape((X.shape[1], self.classes))  # initialization?
+        self.weights = np.random.rand(X.shape[1]* self.classes).reshape((X.shape[1], self.classes))  # initialization
+        old = self.weights
         #sgd
-
+        if self.log:
+            for self.current_epoch in range(0, self.log_epochs):
+                SGD.run_SGD(self, X, y_one_hot)
+                score = LogisticRegression.evaluate(self, X, y, data_set="train")
+                print(np.linalg.norm(self.weights))
+                print("Epoch %i " %self.current_epoch, [(met , " %.2f" %sc)  for met,sc in score.items()])
+        else:
+            SGD.run_SGD(self, X, y_one_hot)
         #evaluate
         score = LogisticRegression.evaluate(self, X, y, data_set="train")
         return score
 
     def predict(self, X, decoded = False):
-        z = X@self.beta
+        z = X@self.weights
         #softmax function
         nom = np.sum( np.exp(z))
         p = np.exp(z) / nom
@@ -82,7 +87,7 @@ class LogisticRegression :
                   'accuracy': LogisticRegression.__accuracy(self,pred_class, y)}
         if self.log:
             #log information
-            temp = pd.DataFrame(dict({"Fit nr": self.__fit_count, "data set": data_set},**scores), index=[self.__log_calls])
+            temp = pd.DataFrame(dict({"Fit nr": self.__fit_count,"epoch":self.current_epoch + 1 , "data set": data_set},**scores), index=[self.__log_calls])
             self.logs = self.logs.append(temp)
             self.__log_calls += 1
             del temp
@@ -128,15 +133,14 @@ class LogisticRegression :
         confusion.columns.name = 'actual class'
         return confusion
 
-
-
-    #functions for adaptive learning rate
-    def __decay(self, gamma0, t):
-        return gamma0 / ( gamma0*t +1)
     
     #Cross entropy function
-    def __cross_entropy(self, prediction, y):
-        return - np.sum(y @ np.log(prediction.T))/len(y)
+    def __cross_entropy(self,W, X, y):
+        z = X@W
+        #softmax function
+        nom = np.sum( np.exp(z))
+        prediction = np.exp(z) / nom
+        return - np.sum(np.where(y ==1,np.log(prediction), 0))/len(y)
 
     def __one_hot_encoding(self, y):
         """

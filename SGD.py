@@ -1,0 +1,93 @@
+# -*- coding: utf-8 -*-
+
+import numpy as np
+from autograd import grad
+
+
+class SGD:
+    '''
+    class which performs Stocastic Gradient Descent for a Neural Network
+    and for Logistic regression. 
+    '''
+    
+    def __init__(self, cost_function, epochs =10, mini_batch_size = 10, 
+                learning_rate = 0.5, adaptive_learning_rate = 'const', tolerance = 1, max_iter = 1000):
+        """
+        Stocastic gradient descent (SGD) should be run
+        in each batch. It should be used by picking a few points
+        at random and sending them through the network. At 
+        which point in the last layer the gradients are found 
+        of these points and a new parameter (weight and bias)
+        is found to minimise the cost function.
+        
+        This function takes the cost function, learning rate and 
+        the parameter.
+        This function outputs the new updated parameter and a 
+        boolean refering to if the tolerance has been reached.
+        'True' we are within the tolerance, 'False' we have not 
+        reached the max tolerance.
+        """
+        #cost_function(self, Weights, data, target) 
+        self.deriv_cost_function = grad(cost_function, 1)
+        self.epochs = epochs
+        self.learning_rate = learning_rate
+        self.tolerance = tolerance
+        self.max_iter = max_iter
+        self.weights = None
+        self.mini_batch_size  = mini_batch_size
+        
+        try:
+            self.learning_rate_adaption = {'const': False, 'decay': SGD.__decay, 'momentum': SGD.__momentum}[adaptive_learning_rate]
+        except:
+            self.learning_rate_adaption = adaptive_learning_rate
+        
+    def run_SGD(self, X, t):
+        samples = X.shape[0]
+        num_mini_batches = samples // self.mini_batch_size
+        iteration = 0
+        old_weights = 100
+        current_epoch = 0
+        time  = 0
+        while SGD.__check(self, iteration, old_weights, current_epoch):
+            cur_seed = np.random.randint(self.epochs*self.max_iter + iteration*current_epoch)
+            np.random.seed(cur_seed)
+            np.random.shuffle(X)
+            np.random.seed(cur_seed)
+            np.random.shuffle(t)
+
+            mini_batches_X = np.array_split(X, num_mini_batches)
+            mini_batches_T = np.array_split(t, num_mini_batches)
+
+            for mini_batch in zip(mini_batches_X, mini_batches_T):
+                try:
+                    gamma = self.learning_rate_adaption(self, self.learning_rate, time)
+                except:
+                    gamma = self.learning_rate
+         
+                self.delta = self.deriv_cost_function(self, self.weights, mini_batch[0], mini_batch[1])
+                old_weights = self.weights
+                self.weights = old_weights - gamma * self.delta
+
+                time += 1
+                iteration += 1
+
+            current_epoch += 1
+        return self.weights
+                
+    
+    #halting condition
+    def __check(self, iteration, old_weights, current_epoch):
+        if iteration >= self.max_iter: 
+            print("Max. iter. reached")
+            return False
+        if np.linalg.norm(old_weights - self.weights) < self.tolerance:
+            print("tolerance reached")
+            return False
+        if current_epoch >= self.epochs: return False
+        return True
+
+    #functions for adaptive learning rate
+    def __decay(self, gamma0, t):
+        return gamma0 / ( gamma0*t +1)
+    def __momentum(self, m0, t):
+        pass

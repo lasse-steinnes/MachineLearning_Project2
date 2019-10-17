@@ -1,5 +1,6 @@
 import numpy as np 
 import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
 
 def model(data, power):
     """
@@ -32,21 +33,32 @@ def one_hot(y):
     return hot, decoding
 
 
-def parse_data(df, target, power = 1):
+def parse_data(df, target, power = 1, unbalanced = True):
     """
     df: pandas.dataframe
     target: column name of target in df
     power: int > 1 (currently only power=1)
     function which parses a pandas data frame to a polynomial model X of power 
+    data is scaled such that [min, max] -> [0,1] in each data column
     and a one_hot encoded target y for logistic regression including a dict for translation
     """
-    pre_X = df.drop(columns= [target]).to_numpy()
-    pre_y = df[target].to_numpy()
+    if unbalanced:
+        y = df[target].to_numpy()
+        y,c = np.unique(y,return_counts=True)
+        drop = int(c[y[0]] - c[y[1]])
+        df = df.sort_values(by = [target])
+        df = df.drop(index = np.arange(0,drop))
+        df = df.sample(frac=1, replace=True)
+
+    y = df[target].to_numpy()
+    df  = df.drop(columns=[target])
+    scaler = MinMaxScaler()
+    df = pd.DataFrame(scaler.fit_transform(df))
+    pre_X = df.to_numpy()   
 
     X = model(pre_X, power)
-    y, y_key = one_hot(pre_y)
 
-    return X, y, y_key
+    return X, y
     
     
 
