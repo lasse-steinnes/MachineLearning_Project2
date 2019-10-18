@@ -35,6 +35,8 @@ class SGD:
         self.max_iter = max_iter
         self.weights = None
         self.mini_batch_size  = mini_batch_size
+        self.time  = 0
+        
         
         try:
             self.learning_rate_adaption = {'const': False, 'decay': SGD.__decay, 'momentum': SGD.__momentum}[adaptive_learning_rate]
@@ -45,35 +47,49 @@ class SGD:
         samples = X.shape[0]
         num_mini_batches = samples // self.mini_batch_size
         iteration = 0
-        old_weights = 100
+        self.__old_weights = 100
         current_epoch = 0
-        time  = 0
-        while SGD.__check(self, iteration, old_weights, current_epoch):
-            cur_seed = np.random.randint(self.epochs*self.max_iter + iteration*current_epoch)
-            np.random.seed(cur_seed)
-            np.random.shuffle(X)
-            np.random.seed(cur_seed)
-            np.random.shuffle(t)
-
-            mini_batches_X = np.array_split(X, num_mini_batches)
-            mini_batches_T = np.array_split(t, num_mini_batches)
-
-            for mini_batch in zip(mini_batches_X, mini_batches_T):
-                try:
-                    gamma = self.learning_rate_adaption(self, self.learning_rate, time)
-                except:
-                    gamma = self.learning_rate
-         
-                self.delta = self.deriv_cost_function(self, self.weights, mini_batch[0], mini_batch[1])
-                old_weights = self.weights
-                self.weights = old_weights - gamma * self.delta
-
-                time += 1
-                iteration += 1
-
+       
+        while SGD.__check(self, iteration, self.__old_weights, current_epoch):
+            iteration = SGD.run_epoch(self,X, t,num_mini_batches, iteration)
             current_epoch += 1
         return self.weights
-                
+
+    def run_minibatch(self, minibatch):
+        """
+        runs a minibatch of from (X,t)
+        """
+        try:
+            gamma = self.learning_rate_adaption(self, self.learning_rate, self.time)
+        except:
+            gamma = self.learning_rate
+    
+        self.delta = self.deriv_cost_function(self, self.weights, minibatch[0], minibatch[1])
+        self.__old_weights = self.weights
+        self.weights = self.__old_weights - gamma * self.delta
+
+        self.time += 1
+
+    def run_epoch(self,X, t, num_mini_batches, iteration = 0):
+        """
+        runs a whole epoch
+        shuffles data and splits it
+        """
+        cur_seed = np.random.randint(self.epochs*self.max_iter + iteration)
+        np.random.seed(cur_seed)
+        np.random.shuffle(X)
+        np.random.seed(cur_seed)
+        np.random.shuffle(t)
+
+        mini_batches_X = np.array_split(X, num_mini_batches)
+        mini_batches_T = np.array_split(t, num_mini_batches)
+
+        for mini_batch in zip(mini_batches_X, mini_batches_T):
+            SGD.run_minibatch(self, mini_batch)
+            iteration += 1
+        return iteration
+
+
     
     #halting condition
     def __check(self, iteration, old_weights, current_epoch):
