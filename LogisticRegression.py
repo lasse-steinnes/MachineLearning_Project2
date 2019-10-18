@@ -2,7 +2,7 @@ import autograd.numpy as np
 from sklearn.model_selection import train_test_split
 import pandas as pd 
 from SGD import SGD
-from helper_functions import OneHot
+from OneHot import OneHot
 
 class LogisticRegression (SGD, OneHot):
     """
