@@ -30,22 +30,5 @@ def test_model():
     assert np.all( X.shape == df.shape)
     assert np.all( X[:,0] - 1 == 0 )
 
-def test_logistic():
-    X, y = parse_data(df, "default payment next month" )
-    N = len(y)
-    print("N = "+str(N)+"; 0: %.2f; 1: %.2f" % tuple(np.bincount(y)/N))
-    X_trian, X_test, y_train, y_test = train_test_split(X,y, test_size =0.2)
-    clf = lr.LogisticRegression(max_iter = 10**4, mini_batch_size=30, epochs = 100, learning_rate=1, adaptive_learning_rate='const', logging = True)
-    clf.fit(X_trian,y_train)
-    clf.evaluate(X_test,y_test)
-    print(clf.logs)
-    print(y_test[-5:],clf.predict(X_test[-5:], decoded=True))
-    print(clf.confusion_matrix(X_test,y_test))
 
-test_logistic()
 
-clf  = LogisticRegression( )
-X, y = parse_data(df, "default payment next month" )
-X_trian, X_test, y_train, y_test = train_test_split(X,y, test_size =0.2)
-clf.fit(X_trian, y_train)
-print(clf.score(X_test, y_test))
