@@ -39,7 +39,8 @@ class SGD:
             mini_batches = np.array(np.array_split(self.training_data, self.num_mini_batches))
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch)
-        
+            
+            cost = cross_entropy_cost_function()
     # evaluate the accuracy of mini_batch
     # and store the best result
     #return a boolean if the tolerance is reached for early stopping   
@@ -52,11 +53,14 @@ class SGD:
         for data in mini_batch:
             #calls backpropagation to find the new gradient or change
             # in gradient
-            grad_w , grad_b = backpropagation(data)
+            dC_dw , dC_db = backpropagation(data)
             
-            self.weights = self.weights - learning_rate * grad_w
-            self.biases = self.biases - learning_rate * grad_b
-      
+            self.weights = self.weights - self.learning_rate * dC_dw
+            self.biases = self.biases - self.learning_rate * dC_dw
+            
+     def momentum(self):
+         
+         
 class SGD_Log(SGD):
     '''
     This is a child class of the SGD class used to run Stocastic
@@ -76,9 +80,15 @@ class SGD_Log(SGD):
             for mini_batch in mini_batches:
                 gradient = self.der_cost_function(self.parameter)
                 self.parameter = self.parameter - self.learning_rate * gradient
-                
-def cross_entropy_cost_function (a, y):
-    return np.sum(-y * np.log(a) + (1 - y) * np.log(1 - a))
+
+              
+def cross_entropy_cost_function (a, t):
+    '''
+    calculate the cost of the cross entropy 
+    a is the output of the last layer
+    t is the target
+    '''
+    return np.sum(-t * np.log(a) + (1 - t) * np.log(1 - a))
 
 
    
