@@ -46,7 +46,7 @@ class LogisticRegression (SGD, OneHot):
         if logging:
             self. epochs = 1
             self.log_epochs = epochs
-            self.logs = pd.DataFrame(columns=["Fit nr","epoch","learning rate", "batch size", "data set", "mse", "r2", "accuracy"])
+            self.logs = pd.DataFrame(columns=["Fit nr","data set", "epoch", "batch size","learning rate", "mse", "r2", "accuracy"])
             self.__log_calls = 0
 
     def fit(self, X, y, split = False , fraction = 0.2, test = None):
@@ -191,10 +191,11 @@ class LogisticRegression (SGD, OneHot):
     def __log_entry(self, scores, learning_rate, batchsize, data_set):
         #log information
         temp = pd.DataFrame(dict({"Fit nr": self.__fit_count,
+                            "data set": data_set,
                             "epoch":self.current_epoch,
                             "batch size": batchsize,
                             "learning rate":learning_rate ,
-                            "data set": data_set},**scores), index=[self.__log_calls])
+                            },**scores), index=[self.__log_calls])
         self.logs = self.logs.append(temp)
         self.__log_calls += 1
         del temp

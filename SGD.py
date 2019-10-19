@@ -36,7 +36,7 @@ class SGD:
         self.tolerance = tolerance
         self.max_iter = max_iter
         #tracks number of weight updates
-        self.iteraton =0
+        self.iteration =0
         #tracks number of epochs
         self. time = 0
 
@@ -50,7 +50,6 @@ class SGD:
     def run_SGD(self, X, t):
         samples = X.shape[0]
         num_mini_batches = samples // self.mini_batch_size
-        self.iteration = 0
         self.__old_weights = 100
        
         while SGD.__check(self, self.iteration, self.__old_weights):
