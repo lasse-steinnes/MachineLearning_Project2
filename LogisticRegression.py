@@ -65,14 +65,14 @@ class LogisticRegression (SGD, OneHot):
                 X_test, y_test = test
         #convert to one hot encoding 
         y_one_hot = OneHot.encoding(self, y)
-        self.weights = 10**(-3)*np.random.randn(X.shape[1]* self.classes).reshape((X.shape[1], self.classes))  # initialization
+        shape = X.shape
+        self.weights = 10**(-3)*np.random.randn(X.shape[1]* self.classes).reshape((shape[1], self.classes))  # initialization
         best_weights = np.copy(self.weights)
         best_acc = 0
         #sgd
         if self.log:
             #set up necessarities for epoch
-            samples = X.shape[0]
-            num_mini_batches = samples // self.mini_batch_size
+            num_mini_batches = shape[0] // self.mini_batch_size
             self.gamma = self.learning_rate
 
             for self.current_epoch in range(0, self.log_epochs +1):
