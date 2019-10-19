@@ -57,7 +57,7 @@ class SGD:
             self.time += 1
         return self.weights
 
-    def run_minibatch(self, minibatch):
+    def run_minibatch(self, minibatch, update_weight = True):
         """
         runs a minibatch of from (X,t)
         """
@@ -68,7 +68,8 @@ class SGD:
     
         self.delta = self.deriv_cost_function(self, self.weights, minibatch[0], minibatch[1])
         self.__old_weights = self.weights
-        self.weights = self.__old_weights - self.gamma * self.delta
+        if update_weight:
+            self.weights = self.__old_weights - self.gamma * self.delta
 
         
 
