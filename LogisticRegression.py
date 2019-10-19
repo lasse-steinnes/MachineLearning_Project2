@@ -49,7 +49,9 @@ class LogisticRegression (SGD, OneHot):
             self.logs = pd.DataFrame(columns=["Fit nr","epoch", "data set", "mse", "r2", "accuracy"])
             self.__log_calls = 0
 
-    def fit(self, X, y, split = False , fraction = 0.2):
+    def fit(self, X, y, split = False , fraction = 0.2, test = None):
+        #split True splits training data again and keeps best parameter
+        #test is optinonal with (X_test, y_test)
         #make sure no change on input data
         X = np.copy(X)
         y = np.copy(y)
@@ -57,7 +59,10 @@ class LogisticRegression (SGD, OneHot):
         if split:
             X, X_test, y, y_test = train_test_split(X, y, test_size = fraction)
         else:
-            X_test, y_test = X, y
+            if test == None:
+                X_test, y_test = X, y
+            else:
+                X_test, y_test = test
         #convert to one hot encoding 
         y_one_hot = OneHot.encoding(self, y)
         self.weights = 10**(-3)*np.random.rand(X.shape[1]* self.classes).reshape((X.shape[1], self.classes))  # initialization
@@ -74,23 +79,21 @@ class LogisticRegression (SGD, OneHot):
                 #training
                 SGD.run_SGD(self, X, y_one_hot)
                 score = LogisticRegression.evaluate(self, X, y, data_set="train")
-                if split:
+
+                if test != None:
                     score = LogisticRegression.evaluate(self, X_test, y_test, data_set="test")
+
                 sc =score["accuracy"]
-                if sc > best_acc:
+                if split and sc > best_acc:
                     best_weights = np.copy(self.weights)
+
                 print("Epoch %i " %self.current_epoch, "accuracy: %.2f" %  sc)
         else:
             SGD.run_SGD(self, X, y_one_hot)
-
-        #evaluate
+        #use best par
         if split:
-            final_eval = "test"
             self.weights = best_weights
-        else:
-            final_eval ="train"
-        score = LogisticRegression.evaluate(self, X_test, y_test, data_set=final_eval)
-        return score
+
 
     def predict(self, X, decoded = False):
         z = X@self.weights
