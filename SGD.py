@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import numpy as np
 from autograd import grad
 
@@ -68,7 +67,7 @@ class SGD:
         self.__old_weights = self.weights
         self.weights = self.__old_weights - gamma * self.delta
 
-        self.time += 1
+        
 
     def run_epoch(self,X, t, num_mini_batches, iteration = 0):
         """
@@ -87,6 +86,7 @@ class SGD:
         for mini_batch in zip(mini_batches_X, mini_batches_T):
             SGD.run_minibatch(self, mini_batch)
             iteration += 1
+        self.time += 1
         return iteration
 
 

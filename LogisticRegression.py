@@ -21,7 +21,7 @@ class LogisticRegression (SGD, OneHot):
 
     """
     def __init__(self, classes = 2, class_dict = None, learning_rate = 0.01, adaptive_learning_rate = 'const',
-                 epochs = 10, mini_batch_size=10, max_iter=5000, tol = 1e-7, logging = False):
+                 epochs = 10, mini_batch_size=10, max_iter=5000, tol = 1e-7, regualrization = ('l2', 0.01), logging = False):
         """
         classes: #predicted classes
         class_dict: provide a dictonary which encodes the on hot mapping {value: index}
@@ -31,12 +31,16 @@ class LogisticRegression (SGD, OneHot):
                                 if set to 'decay' use adaptive learning rate
                                 provide own function which takes inital learning_rate and time_step t as argument
         max_iter, tol sets maximal #iterations and minimal change of weights beta in sgd
+        regularization:  tuple (norm, lambda) supported norms are l1, l2
         logging: if True keep log of all updates
         """
         self.classes = classes
+        self.reg = regualrization
+
         OneHot.__init__(self, dictonary=class_dict)      
         SGD.__init__(self, LogisticRegression.__cross_entropy, epochs =epochs, mini_batch_size = mini_batch_size,
                      learning_rate = learning_rate, adaptive_learning_rate = adaptive_learning_rate, tolerance = tol, max_iter = max_iter)
+        
         self.__fit_count = 0
         self.log = logging
         if logging:
@@ -58,7 +62,13 @@ class LogisticRegression (SGD, OneHot):
         best_acc = 0
         #sgd
         if self.log:
-            for self.current_epoch in range(0, self.log_epochs):
+            self.current_epoch = 0
+            #pre training log
+            score = LogisticRegression.evaluate(self, X, y, data_set="train")
+            if split:
+                score = LogisticRegression.evaluate(self, X_test, y_test, data_set="test")
+            for self.current_epoch in range(1, self.log_epochs +1):
+                #training
                 SGD.run_SGD(self, X, y_one_hot)
                 score = LogisticRegression.evaluate(self, X, y, data_set="train")
                 if split:
@@ -98,7 +108,7 @@ class LogisticRegression (SGD, OneHot):
                   'accuracy': LogisticRegression.__accuracy(self,pred_class, y)}
         if self.log:
             #log information
-            temp = pd.DataFrame(dict({"Fit nr": self.__fit_count,"epoch":self.current_epoch + 1 , "data set": data_set},**scores), index=[self.__log_calls])
+            temp = pd.DataFrame(dict({"Fit nr": self.__fit_count,"epoch":self.current_epoch  , "data set": data_set},**scores), index=[self.__log_calls])
             self.logs = self.logs.append(temp)
             self.__log_calls += 1
             del temp
@@ -154,7 +164,12 @@ class LogisticRegression (SGD, OneHot):
         #softmax function
         nom = np.sum( np.exp(z))
         prediction = np.exp(z) / nom
-        return - np.sum(np.where(y ==1,np.log(prediction), 0))/len(y)
+        ret = - np.sum(np.where(y ==1,np.log(prediction), 0))/len(y)
+        if self.reg[0] == 'l1':
+            ret -=  self.reg[1] * np.sum(np.abs(W))
+        if self.reg[0] == 'l2':
+            ret -=  self.reg[1] * np.sum(np.linalg.norm(W, axis = 1))
+        return ret
 
     #MSE; R2; accuracy
     def __MSE(self, prediction, y):

@@ -1,3 +1,4 @@
+import numpy as np
 class OneHot:
     """
     class that provides one hot encoding for classification problems
