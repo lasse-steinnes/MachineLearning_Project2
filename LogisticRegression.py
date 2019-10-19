@@ -50,6 +50,9 @@ class LogisticRegression (SGD, OneHot):
             self.__log_calls = 0
 
     def fit(self, X, y, split = False , fraction = 0.2):
+        #make sure no change on input data
+        X = np.copy(X)
+        y = np.copy(y)
         self.__fit_count += 1
         if split:
             X, X_test, y, y_test = train_test_split(X, y, test_size = fraction)
