@@ -58,7 +58,7 @@ def compare(df, gamma, adapt_gamma, mini_batch_size, epochs , regularization, mi
 
     for k in range(0,k_fold):
         X_trian, X_test, y_train, y_test = train_test_split(X,y, test_size =0.2)
-        clf_own.fit(X_trian,y_train, split = False)
+        clf_own.fit(X_trian,y_train, split = False, test = (X_test, y_test))
         own  += clf_own.evaluate(X_test,y_test)["accuracy"] 
         confusion += clf_own.confusion_matrix(X_test,y_test)   
     
