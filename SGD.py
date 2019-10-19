@@ -45,12 +45,12 @@ class SGD:
     def run_SGD(self, X, t):
         samples = X.shape[0]
         num_mini_batches = samples // self.mini_batch_size
-        iteration = 0
+        self.iteration = 0
         self.__old_weights = 100
         current_epoch = 0
        
-        while SGD.__check(self, iteration, self.__old_weights, current_epoch):
-            iteration = SGD.run_epoch(self,X, t,num_mini_batches, iteration)
+        while SGD.__check(self, self.iteration, self.__old_weights, current_epoch):
+            SGD.run_epoch(self,X, t,num_mini_batches)
             current_epoch += 1
         return self.weights
 
@@ -59,22 +59,32 @@ class SGD:
         runs a minibatch of from (X,t)
         """
         try:
-            gamma = self.learning_rate_adaption(self, self.learning_rate, self.time)
+            self.gamma = self.learning_rate_adaption(self, self.learning_rate, self.time)
         except:
-            gamma = self.learning_rate
+            self.gamma = self.learning_rate
     
         self.delta = self.deriv_cost_function(self, self.weights, minibatch[0], minibatch[1])
         self.__old_weights = self.weights
-        self.weights = self.__old_weights - gamma * self.delta
+        self.weights = self.__old_weights - self.gamma * self.delta
 
         
 
-    def run_epoch(self,X, t, num_mini_batches, iteration = 0):
+    def run_epoch(self,X, t, num_mini_batches):
         """
         runs a whole epoch
         shuffles data and splits it
         """
-        cur_seed = np.random.randint(self.epochs*self.max_iter + iteration)
+        for mini_batch in SGD.creat_mini_batch(self, X, t, num_mini_batches):
+            SGD.run_minibatch(self, mini_batch)
+            self.iteration += 1
+        self.time += 1
+        
+
+    def creat_mini_batch(self,X, t, num_mini_batches):
+        """
+        returns array with [... (X_n, t_n) ...] for 0 < n < num_mini_batches
+        """
+        cur_seed = np.random.randint(self.epochs*self.max_iter + self.iteration)
         np.random.seed(cur_seed)
         np.random.shuffle(X)
         np.random.seed(cur_seed)
@@ -83,13 +93,7 @@ class SGD:
         mini_batches_X = np.array_split(X, num_mini_batches)
         mini_batches_T = np.array_split(t, num_mini_batches)
 
-        for mini_batch in zip(mini_batches_X, mini_batches_T):
-            SGD.run_minibatch(self, mini_batch)
-            iteration += 1
-        self.time += 1
-        return iteration
-
-
+        return zip(mini_batches_X, mini_batches_T)
     
     #halting condition
     def __check(self, iteration, old_weights, current_epoch):
