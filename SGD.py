@@ -28,14 +28,19 @@ class SGD:
         """
         #cost_function(self, Weights, data, target) 
         self.deriv_cost_function = grad(cost_function, 1)
+
         self.epochs = epochs
+        self.mini_batch_size  = mini_batch_size
         self.learning_rate = learning_rate
+
         self.tolerance = tolerance
         self.max_iter = max_iter
+        #tracks number of weight updates
+        self.iteraton =0
+        #tracks number of epochs
+        self. time = 0
+
         self.weights = None
-        self.mini_batch_size  = mini_batch_size
-        self.time  = 0
-        
         
         try:
             self.learning_rate_adaption = {'const': False, 'decay': SGD.__decay, 'momentum': SGD.__momentum}[adaptive_learning_rate]
@@ -47,11 +52,10 @@ class SGD:
         num_mini_batches = samples // self.mini_batch_size
         self.iteration = 0
         self.__old_weights = 100
-        current_epoch = 0
        
-        while SGD.__check(self, self.iteration, self.__old_weights, current_epoch):
+        while SGD.__check(self, self.iteration, self.__old_weights):
             SGD.run_epoch(self,X, t,num_mini_batches)
-            current_epoch += 1
+            self.time += 1
         return self.weights
 
     def run_minibatch(self, minibatch):
@@ -96,14 +100,14 @@ class SGD:
         return zip(mini_batches_X, mini_batches_T)
     
     #halting condition
-    def __check(self, iteration, old_weights, current_epoch):
+    def __check(self, iteration, old_weights):
         if iteration >= self.max_iter: 
             print("Max. iter. reached")
             return False
         if np.linalg.norm(old_weights - self.weights) < self.tolerance:
             print("tolerance reached")
             return False
-        if current_epoch >= self.epochs: return False
+        if self.time >= self.epochs: return False
         return True
 
     #functions for adaptive learning rate

@@ -46,7 +46,7 @@ class LogisticRegression (SGD, OneHot):
         if logging:
             self. epochs = 1
             self.log_epochs = epochs
-            self.logs = pd.DataFrame(columns=["Fit nr","epoch", "data set", "mse", "r2", "accuracy"])
+            self.logs = pd.DataFrame(columns=["Fit nr","epoch","learning rate", "batch size", "data set", "mse", "r2", "accuracy"])
             self.__log_calls = 0
 
     def fit(self, X, y, split = False , fraction = 0.2, test = None):
@@ -65,31 +65,34 @@ class LogisticRegression (SGD, OneHot):
                 X_test, y_test = test
         #convert to one hot encoding 
         y_one_hot = OneHot.encoding(self, y)
-        self.weights = 10**(-3)*np.random.rand(X.shape[1]* self.classes).reshape((X.shape[1], self.classes))  # initialization
+        self.weights = 10**(-3)*np.random.randn(X.shape[1]* self.classes).reshape((X.shape[1], self.classes))  # initialization
         best_weights = np.copy(self.weights)
         best_acc = 0
         #sgd
         if self.log:
-            self.current_epoch = 0
-            #pre training log
-            score = LogisticRegression.evaluate(self, X, y, data_set="train")
-            if split:
-                score = LogisticRegression.evaluate(self, X_test, y_test, data_set="test")
-            for self.current_epoch in range(1, self.log_epochs +1):
-                #training
-                SGD.run_SGD(self, X, y_one_hot)
-                score = LogisticRegression.evaluate(self, X, y, data_set="train")
+            #set up necessarities for epoch
+            samples = X.shape[0]
+            num_mini_batches = samples // self.mini_batch_size
+            self.gamma = self.learning_rate
 
-                if test != None:
-                    score = LogisticRegression.evaluate(self, X_test, y_test, data_set="test")
-
+            for self.current_epoch in range(0, self.log_epochs +1):
+                #logging
+                score = LogisticRegression.evaluate(self, X, y)
                 sc =score["accuracy"]
+                LogisticRegression.__log_entry(self, score, self.gamma,self.mini_batch_size , "train")
+                if split or (test !=None):
+                    score = LogisticRegression.evaluate(self, X_test, y_test)
+                    LogisticRegression.__log_entry(self, score, self.gamma,self.mini_batch_size ,"test")
+                #training one epoch at a time
+                SGD.run_epoch(self, X, y_one_hot, num_mini_batches)
+
                 if split and sc > best_acc:
                     best_weights = np.copy(self.weights)
 
                 print("Epoch %i " %self.current_epoch, "accuracy: %.2f" %  sc)
         else:
             SGD.run_SGD(self, X, y_one_hot)
+
         #use best par
         if split:
             self.weights = best_weights
@@ -104,7 +107,7 @@ class LogisticRegression (SGD, OneHot):
             return OneHot.decoding(self, p)
         return p
 
-    def evaluate(self, X, y, data_set= "test"):
+    def evaluate(self, X, y):
         prediction = LogisticRegression.predict(self, X)
         
         pred_class = OneHot.decoding(self, prediction)
@@ -112,12 +115,6 @@ class LogisticRegression (SGD, OneHot):
         scores = {'mse' : LogisticRegression.__MSE(self,pred_class, y),
                   'r2': LogisticRegression.__R2(self,pred_class, y),
                   'accuracy': LogisticRegression.__accuracy(self,pred_class, y)}
-        if self.log:
-            #log information
-            temp = pd.DataFrame(dict({"Fit nr": self.__fit_count,"epoch":self.current_epoch  , "data set": data_set},**scores), index=[self.__log_calls])
-            self.logs = self.logs.append(temp)
-            self.__log_calls += 1
-            del temp
 
         return scores
 
@@ -190,3 +187,14 @@ class LogisticRegression (SGD, OneHot):
     def __accuracy(self, prediction, y):
         mask = prediction == y
         return len(prediction[mask])/len(prediction)
+    
+    def __log_entry(self, scores, learning_rate, batchsize, data_set):
+        #log information
+        temp = pd.DataFrame(dict({"Fit nr": self.__fit_count,
+                            "epoch":self.current_epoch,
+                            "batch size": batchsize,
+                            "learning rate":learning_rate ,
+                            "data set": data_set},**scores), index=[self.__log_calls])
+        self.logs = self.logs.append(temp)
+        self.__log_calls += 1
+        del temp
