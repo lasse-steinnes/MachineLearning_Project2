@@ -92,7 +92,8 @@ class LogisticRegression (SGD, OneHot):
                 print("Epoch %i " %self.current_epoch, "accuracy: %.2f" %  sc)
         else:
             SGD.run_SGD(self, X, y_one_hot)
-
+        #reset for netx fit
+        self.iterations = 0
         #use best par
         if split:
             self.weights = best_weights
@@ -123,43 +124,7 @@ class LogisticRegression (SGD, OneHot):
         returns the confusion matrix, i.e. number of true positives and flase negatives for all classes
         """
         prediction = LogisticRegression.predict(self, X)
-        prediction = OneHot.decoding(self, prediction)
-        
-        list_of_classes = np.array(list(self.one_hot_encoding_key))
-        list_of_classes = list_of_classes[:,np.newaxis]
-
-        matrix = np.zeros( (self.classes, self.classes))
-        for i, value in enumerate(self.one_hot_encoding_key):
-            mask = prediction == value
-            true_class = y[mask]
-            matrix[i] = np.sum(true_class == list_of_classes, axis=1)
-
-        tp = np.diag(matrix)
-        fp = np.sum(matrix,axis=1) - tp
-        fn = np.sum(matrix, axis=0) -tp
-        tn = np.sum(matrix) - tp -fp -fn
-        P = tp /(tp + fp)
-        R = tp /(tp + fn)
-        S = tn /(tn + fp)
-        A = (tp +tn) / (tp + tn + fp +fn)
-        
-        metrics = [P,R,S,A]
-
-        norm = np.sum(matrix)
-        input_df = np.zeros( (self.classes +1, self.classes +4))
-        input_df[:-1,:self.classes] = matrix
-        input_df[-1, :self.classes] = np.sum(matrix,axis = 1)/norm
-
-        for i, val in enumerate(metrics):
-            input_df[:-1,-4 + i] = val
-
-        confusion = pd.DataFrame(input_df,
-                                 columns = np.append([ str(self.one_hot_decoding_key[i]) for i in range(self.classes)], ["precision", "recall", "specificity", "accuracy"]),
-                                 index = np.append([self.one_hot_decoding_key[i] for i in range(self.classes)],'occurence'))
-        confusion.index.name = 'predicted class'
-        confusion.columns.name = 'actual class'
-        return confusion
-
+        return OneHot.confusion(self, prediction, y)
     
     #Cross entropy function
     def __cross_entropy(self,W, X, y):
