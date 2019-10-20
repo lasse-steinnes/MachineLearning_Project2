@@ -1,3 +1,6 @@
+"""
+functions for parsing data frame from credit card data
+"""
 import numpy as np 
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -27,7 +30,6 @@ def parse_data(df, target, power = 1, unbalanced = True):
         y = df[target].to_numpy()
         _,c = np.unique(y,return_counts=True)
         drop = int(c[0]- c[1])
-        print(drop)
         df = df.sort_values(by = [target])
         df.index = np.arange(0,len(y))
         df = df.drop(labels = np.arange(0,drop), axis = 0)

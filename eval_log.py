@@ -1,3 +1,7 @@
+"""
+script that finds the optimal hyperparameter for LogisticRegression and compares
+them to sklearn implementations
+"""
 import pandas as pd 
 import numpy as np 
 from sklearn.model_selection import train_test_split
@@ -58,7 +62,7 @@ def compare(df, gamma, adapt_gamma, mini_batch_size, epochs , regularization, mi
 
     for k in range(0,k_fold):
         X_trian, X_test, y_train, y_test = train_test_split(X,y, test_size =0.2)
-        clf_own.fit(X_trian,y_train, split = False, test = (X_test, y_test))
+        clf_own.fit(X_trian,y_train, split = True,fraction = 0.1, test = (X_test, y_test))
         own  += clf_own.evaluate(X_test,y_test)["accuracy"] 
         confusion += clf_own.confusion_matrix(X_test,y_test)   
     
@@ -92,7 +96,7 @@ def compare(df, gamma, adapt_gamma, mini_batch_size, epochs , regularization, mi
         )
     f.write("The overall accuracy of the own Implementation (SGD) is %.3f, of the exact \\texttt{scikit} Logisitc regression is %.3f "
             %(own/k_fold, ex/k_fold)+
-            "and of the SGD \\text{scikit} implementation is %.3f.}" % (sgd/k_fold)
+            "and of the SGD \\text{scikit} implementation is %.3f. Results are %i times corss validated.}" % (sgd/k_fold, k_fold)
             )
     f.write("\n \n")
     confusion.to_latex(buf = f)
@@ -109,14 +113,18 @@ def main():
 
     res = pd. read_csv("Results/LogReg/hyper_par.csv")
     for balance in [False, True]:
-        data = res[res["balanced"] == balance]
-        best = data[data["accuracy"] == data["accuracy"].max()]
-        gamma = best["learning rate"].mean()
-        adapt_gamma = best["adaptive learning"].iloc[0]
-        mini_batch_size = int(best["batch size"].mean())
-        epochs = int(best["epochs"].mean())
-        regularization = ( best["regularization"].iloc[0], best["regularization parameter"].mean())
-        compare(df, gamma, adapt_gamma, mini_batch_size, epochs , regularization, balanced = balance, name="best_"+str(balance))
+        for gamma in [0.5, 0.1, 0.01]:
+            for mini_batch_size in [10, 30, 50]:
+
+                data = res[res["balanced"] == balance]
+                best = data[data["accuracy"] == data["accuracy"].max()]
+                gamma = best["learning rate"].mean()
+                adapt_gamma = best["adaptive learning"].iloc[0]
+                mini_batch_size = int(best["batch size"].mean())
+                epochs = 60#int(best["epochs"].mean())
+                regularization = ( best["regularization"].iloc[0], best["regularization parameter"].mean())
+                compare(df, gamma, adapt_gamma, mini_batch_size, epochs , regularization, balanced = balance,
+                            name="best_"+str(balance)+str(int(gamma*100))+str(mini_batch_size) , k_fold=10)
 
 if __name__ == '__main__':
     main()
