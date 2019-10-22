@@ -58,26 +58,26 @@ class Neural_Network:
         - lambda is penalty for weigths
         ----------------------------------------
         '''
-            self.f_z, self.probabilities = feed_forward(f_z)
+        self.f_z, self.probabilities = feed_forward(f_z)
 
-            # setting the first layer
-            error_now = self.probabilities - self.data
+        # setting the first layer
+        error_now = self.probabilities - self.data
 
-            # looping through layers
-            for i in reversed(range(1,len(f_z))): # f_z: (batch,nodes)
-                error_back = np.matmul(error_now, self.weights[i].T)* self.f_z[:,i]*(1 - self.f_z[:,i]) # prevlayer*number of targets (binary 1)
+        # looping through layers
+        for i in reversed(range(1,len(f_z))): # f_z: (batch,nodes)
+            error_back = np.matmul(error_now, self.weights[i].T)* self.f_z[:,i]*(1 - self.f_z[:,i]) # prevlayer*number of targets (binary 1)
 
-                # Using errors to calculate gradients
-                self.now_weights_gradient = np.matmul(self.f_z[:,i].T, error_now)
-                self.now_bias_gradient = np.sum(error_now, axis=0)
+        # Using errors to calculate gradients
+            self.now_weights_gradient = np.matmul(self.f_z[:,i].T, error_now)
+            self.now_bias_gradient = np.sum(error_now, axis=0)
 
-                if self.lmbd > 0.0:
-                    self.now_weights_gradient += self.lmbd * self.now_weights # or 1/n taking the mean, lambda is penalty on weights
-                    self.now_weights_gradient += self.lmbd * self.back_weights
+            if self.lmbd > 0.0:
+                self.now_weights_gradient += self.lmbd * self.now_weights # or 1/n taking the mean, lambda is penalty on weights
+                self.now_weights_gradient += self.lmbd * self.back_weights
 
-                self.weights[:,i] -= self.eta * self.now_weights_gradient
-                self.biases[i] -= self.eta * self.now_bias_gradient
-                error_now = error_back
+            self.weights[:,i] -= self.eta * self.now_weights_gradient
+            self.biases[i] -= self.eta * self.now_bias_gradient
+            error_now = error_back
 
 # must calculate these in backpropagation: dC_dw , dC_db
 
