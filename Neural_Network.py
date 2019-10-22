@@ -64,6 +64,10 @@ class Neural_Network:
         # setting the first layer
         error_now = self.probabilities - self.data
 
+        # Might need these
+        #self.output_weights_gradient = np.matmul(self.a_h.T, error_output)
+        #self.output_bias_gradient = np.sum(error_output, axis=0)
+
         # looping through layers
         for i in reversed(range(1,len(f_z))): # f_z: (batch,nodes)
             error_back = np.matmul(error_now, self.weights[i].T)* self.f_z[:,i]*(1 - self.f_z[:,i]) # prevlayer*number of targets (binary 1)
