@@ -8,7 +8,7 @@ class LogisticRegression :
     __init__(self, classes = 2, learning_rate = 0.01, adaptive_learning_rate = 'const', max_iter=5000, tol = 1e-7, logging = False)
 
     fit(X, y): performs fit on given data X shaped (sampels, features) to get targets y shaped (samples,)
-               inferre parameter size beta shaped (features, classes) 
+               inferre parameter size beta shaped (features, classes)
                call to stochastic gradien decent, with learning rate gamma (optional decay; momentum, own function depending on #of calls to sgd)
 
     evaluate(X,y) tests the models performenc on predicting the given y shaped (tests,) when givven the input data X shaped (tests, features)
@@ -39,12 +39,12 @@ class LogisticRegression :
 
         self.max_iter = max_iter
         self.tol = tol
-        self.gamma = learning_rate        
+        self.gamma = learning_rate
         try:
             self.learning_rate_adaption = {'const': False, 'decay': LogisticRegression.__decay, 'momentum': LogisticRegression.__momentum}
         except:
             self.learning_rate_adaption = adaptive_learning_rate
-        
+
         self.__fit_count = 0
         self.log = logging
         if logging:
@@ -53,7 +53,7 @@ class LogisticRegression :
 
     def fit(self, X, y, batch_size = 10):
         self.__fit_count += 1
-        #convert to one hot encoding 
+        #convert to one hot encoding
         y_one_hot = LogisticRegression.__one_hot_encoding(self, y)
         self.beta = np.zeros((X.shape[1], self.classes)) # initialization?
         self.beta = 0.001*np.random.randn(X.shape[1]* self.classes).reshape((X.shape[1], self.classes))  # initialization?
@@ -74,7 +74,7 @@ class LogisticRegression :
 
     def evaluate(self, X, y, data_set= "test"):
         prediction = LogisticRegression.predict(self, X)
-        
+
         pred_class = LogisticRegression.__one_hot_decoding(self, prediction)
 
         scores = {'mse' : LogisticRegression.__MSE(self,pred_class, y),
@@ -95,7 +95,7 @@ class LogisticRegression :
         """
         prediction = LogisticRegression.predict(self, X)
         prediction = LogisticRegression.__one_hot_decoding(self, prediction)
-        
+
         list_of_classes = np.array(list(self.one_hot_encoding_key))
         list_of_classes = list_of_classes[:,np.newaxis]
 
@@ -113,7 +113,7 @@ class LogisticRegression :
         R = tp /(tp + fn)
         S = tn /(tn + fp)
         A = (tp +tn) / (tp + tn + fp +fn)
-        
+
         metrics = [P,R,S,A]
 
         input_df = np.zeros( (self.classes, self.classes +4))
@@ -133,7 +133,7 @@ class LogisticRegression :
     #functions for adaptive learning rate
     def __decay(self, gamma0, t):
         return gamma0 / ( gamma0*t +1)
-    
+
     #Cross entropy function
     def __cross_entropy(self, prediction, y):
         return - np.sum(y @ np.log(prediction.T))/len(y)
@@ -147,7 +147,7 @@ class LogisticRegression :
         l_uni = len(uni)
         if l_uni != self.classes:
             print("Not all classes in training data!")
-        
+
         l_y = len(y)
         hot = np.zeros((l_y, l_uni))
         #inferr dict only at first call otherwise it is provided from class
@@ -155,11 +155,11 @@ class LogisticRegression :
         if (self.__fit_count == 1) and not self.__provided_dict:
             self.one_hot_encoding_key = {uni[i]: i for i in range(l_uni)}
             self.one_hot_decoding_key = {i:uni[i] for i in range(l_uni)}
-            
+
         for i in range(l_y):
             index  = self.one_hot_encoding_key[y[i]]
             hot[i, index] = 1
-        return hot 
+        return hot
 
     def __one_hot_decoding(self, y):
         """
@@ -167,9 +167,9 @@ class LogisticRegression :
         """
         l_y = len(y)
         pred_class = np.zeros(l_y)
-       
+
         for i in range(l_y):
-            pred_class[i] = self.one_hot_decoding_key[np.argmax(y[i])] 
+            pred_class[i] = self.one_hot_decoding_key[np.argmax(y[i])]
         return pred_class
 
     #MSE; R2; accuracy

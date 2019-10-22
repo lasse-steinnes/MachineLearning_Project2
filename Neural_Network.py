@@ -4,10 +4,10 @@ import numpy as np
 class Neural_Network:
 
     def __init__(self, training_data, number_of_nodes, eta = 0.01, lamda = 0.0):
-        
+
         self.training_data = training_data
         self.training_data, self.training_target = zip(*self.training_data)
-        
+
         self.nodes = number_of_nodes
         self.layers = len(number_of_nodes)
         #initialise the biases and weights with a random number
@@ -59,28 +59,26 @@ class Neural_Network:
         - lambda is penalty for weigths
         ----------------------------------------
         '''
-        
-        
-            self.f_z, self.probabilities = feed_forward(f_z)
+        self.f_z, self.probabilities = feed_forward(f_z)
 
-            # setting the first layer
-            error_now = self.probabilities - self.data
+        # setting the first layer
+        error_now = self.probabilities - self.data
 
-            # looping through layers
-            for i in reversed(range(1,len(f_z))): # f_z: (batch,nodes)
-                error_back = np.matmul(error_now, self.weights[i].T)* self.f_z[:,i]*(1 - self.f_z[:,i]) # prevlayer*number of targets (binary 1)
+        # looping through layers
+        for i in reversed(range(1,len(f_z))): # f_z: (batch,nodes)
+            error_back = np.matmul(error_now, self.weights[i].T)* self.f_z[:,i]*(1 - self.f_z[:,i]) # prevlayer*number of targets (binary 1)
 
-                # Using errors to calculate gradients
-                self.now_weights_gradient = np.matmul(self.f_z[:,i].T, error_now)
-                self.now_bias_gradient = np.sum(error_now, axis=0)
+        # Using errors to calculate gradients
+            self.now_weights_gradient = np.matmul(self.f_z[:,i].T, error_now)
+            self.now_bias_gradient = np.sum(error_now, axis=0)
 
-                if self.lmbd > 0.0:
-                    self.now_weights_gradient += self.lmbd * self.now_weights # or 1/n taking the mean, lambda is penalty on weights
-                    self.now_weights_gradient += self.lmbd * self.back_weights
+            if self.lmbd > 0.0:
+                self.now_weights_gradient += self.lmbd * self.now_weights # or 1/n taking the mean, lambda is penalty on weights
+                self.now_weights_gradient += self.lmbd * self.back_weights
 
-                self.weights[:,i] -= self.eta * self.now_weights_gradient
-                self.biases[i] -= self.eta * self.now_bias_gradient
-                error_now = error_back
+            self.weights[:,i] -= self.eta * self.now_weights_gradient
+            self.biases[i] -= self.eta * self.now_bias_gradient
+            error_now = error_back
 
 # must calculate these in backpropagation: dC_dw , dC_db
 
@@ -102,7 +100,7 @@ class Neural_Network:
         """
         self.cost_function = cost_function
         self.epochs = epochs
-        
+
         self.num_mini_batches = self.training_x / mini_batch_size
         self.learning_rate = learning_rate
         self.tol_reached = False
@@ -118,24 +116,24 @@ class Neural_Network:
             mini_batches_data = np.array(np.array_split(self.training_data, self.num_mini_batches))
             mini_batches_target = np.array(np.array_split(self.training_target, self.num_mini_batches))
             for mini_batch_data, mini_batch_target in zip(mini_batches_data,mini_batches_target):
-                
+
                 a = Neural_Network.feedforward(mini_batch_data)
                 Neural_Network.update_mini_batch(mini_batch_data, mini_batch_target)
 
                 #initialise the velocity to zero
                 v_dw = 0
                 v_db = 0
-        
-                #calls backpropagation to find the new gradient 
+
+                #calls backpropagation to find the new gradient
                 dC_dw , dC_db = Neural_Network.backpropagation(mini_batch_data, mini_batch_target)
-                
+
                 if (self.momentum == True):
                     v_dw = v_dw * self.gamma + (1-self.gamma)* dC_dw
                     v_db = v_db * self.gamma + (1-self.gamma)* dC_dw
-                    
+
                     self.weights = self.weights - self.learning_rate * v_dw
                     self.biases = self.biases - self.learning_rate * v_db
-                else:    
+                else:
                     self.weights = self.weights - self.learning_rate * dC_dw
                     self.biases = self.biases - self.learning_rate * dC_dw
 
@@ -146,7 +144,7 @@ class Neural_Network:
             self.store_cost = self.store_costs.append(cost)
             accuracy = Neural_Network.classification_accuracy(a, mini_batch_target)
             print('accuracy is :', accuracy)
-            
+
             if self.store_cost.min() < self.tolerance:
                 return
     def classification_accuracy(a , target):
@@ -155,7 +153,7 @@ class Neural_Network:
             if x == y:
                 accuracy += 1
         return accuracy
-                
+
     def sigmoid_act(self, z):
         return 1.0/(1.0+np.exp(-z))
 
