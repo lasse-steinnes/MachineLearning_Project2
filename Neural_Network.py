@@ -52,29 +52,36 @@ class Neural_Network:
         How to do this on different layers depend on dimensions of f_z)
         ---------------------------------------
         Parameters:
-        - Design matrix X (f_z?)
         - data (corresponding to Y)
+        - X
         - f_z: activation (function a^l?)
         - prob: probabilities
+        - lambda is penalty for weigths
         ----------------------------------------
         '''
-        self.f_z, self.probabilities = self.feed_forward(f_z)
-        error_output = self.probabilities - self.data
-        error_hidden = np.matmul(error_output, self.output_weights.T) * self.f_z * (1 - self.f_z)
-        self.hidden_weights_gradient = np.matmul(self.X_data.T, error_hidden)
-        self.hidden_bias_gradient = np.sum(error_hidden, axis=0)
+        
+        
+            self.f_z, self.probabilities = feed_forward(f_z)
 
-        self.output_weights_gradient = np.matmul(self.f_z.T, error_output)
-        self.output_bias_gradient = np.sum(error_output, axis=0)
+            # setting the first layer
+            error_now = self.probabilities - self.data
 
-        if self.lmbd > 0.0:
-            self.output_weights_gradient += self.lmbd * self.output_weights
-            self.hidden_weights_gradient += self.lmbd * self.hidden_weights
+            # looping through layers
+            for i in reversed(range(1,len(f_z))): # f_z: (batch,nodes)
+                error_back = np.matmul(error_now, self.weights[i].T)* self.f_z[:,i]*(1 - self.f_z[:,i]) # prevlayer*number of targets (binary 1)
 
-            self.output_weights -= self.eta * self.output_weights_gradient
-            self.output_bias -= self.eta * self.output_bias_gradient
-            self.hidden_weights -= self.eta * self.hidden_weights_gradient
-            self.hidden_bias -= self.eta * self.hidden_bias_gradient
+                # Using errors to calculate gradients
+                self.now_weights_gradient = np.matmul(self.f_z[:,i].T, error_now)
+                self.now_bias_gradient = np.sum(error_now, axis=0)
+
+                if self.lmbd > 0.0:
+                    self.now_weights_gradient += self.lmbd * self.now_weights # or 1/n taking the mean, lambda is penalty on weights
+                    self.now_weights_gradient += self.lmbd * self.back_weights
+
+                self.weights[:,i] -= self.eta * self.now_weights_gradient
+                self.biases[i] -= self.eta * self.now_bias_gradient
+                error_now = error_back
+
 # must calculate these in backpropagation: dC_dw , dC_db
 
     def SGD(self, cost_function, epochs =10, mini_batch_size = 10, learning_rate = 0.5, tolerance = 1, momentum =True):
