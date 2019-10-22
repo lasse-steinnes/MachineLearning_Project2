@@ -1,28 +1,29 @@
 # -*- coding: utf-8 -*-
-
-
+import numpy as np
 
 class Neural_Network:
 
-    def __init__(data, number_of_nodes,eta = 0.01, lambda = 0.0):
+    def __init__(self, training_data, number_of_nodes, eta = 0.01, lamda = 0.0):
 
-        self.data = data
-        self.num_nodes = number_of_nodes
+        self.training_data = training_data
+        self.training_data, self.training_target = zip(*self.training_data)
+
+        self.nodes = number_of_nodes
         self.layers = len(number_of_nodes)
         #initialise the biases and weights with a random number
         ''' biases is a list of matrices, one matrix for each layer. the size
         is the number of nodesx1
         '''
-        self.biases = [np.random.randn(i, 1) for i in sizes[1:]]
+        self.biases = [np.random.randn(i, 1) for i in self.nodes[1:]]
 
         '''weights is a list of matrices, one matrix for each layer.
         e.g if the layers have 10,5,2 nodes, then it creates 5x10 and 2x5 matrices
         to contain the weights
         '''
-        self.weights = [np.random.randn(i, j) for j, i in zip(sizes[:-1], sizes[1:])]
+        self.weights = [np.random.randn(i, j) for j, i in zip(self.nodes[:-1], self.nodes[1:])]
 
         # setup up a list of activation functions
-        self.functions = [Neural_Network.sigmoid_act for i in self.layers]
+        self.functions = [Neural_Network.sigmoid_act for i in range(0, self.layers)]
 
     def feedforward(self, f_z):
         '''
@@ -35,7 +36,7 @@ class Neural_Network:
             z = np.dot(weight, f_z) + bias
             f_z = function(z)
             prob_term = np.exp(f_z)
-            probabilities =  prob_term/np.sum(prob_term, axis = 1, keepdims = True)
+            self.probabilities =  prob_term/np.sum(prob_term, axis = 1, keepdims = True)
         return self.f_z, self.probabilities
 
     def backpropagation(self,f_z,data):
@@ -81,7 +82,7 @@ class Neural_Network:
 
 # must calculate these in backpropagation: dC_dw , dC_db
 
-    def SGD(self, cost_function, training_data = np.arange(100.0), epochs =10, mini_batch_size = 10, learning_rate = 0.5, tolerance = 1):
+    def SGD(self, cost_function, epochs =10, mini_batch_size = 10, learning_rate = 0.5, tolerance = 1, momentum =True):
         """
         Stocastic gradient descent (SGD) should be run
         in each batch. It should be used by picking a few points
@@ -98,45 +99,60 @@ class Neural_Network:
         reached the max tolerance.
         """
         self.cost_function = cost_function
-        self.training_data = training_data
         self.epochs = epochs
-        self.num_mini_batches = training_data / mini_batch_size
+
+        self.num_mini_batches = self.training_x / mini_batch_size
         self.learning_rate = learning_rate
         self.tol_reached = False
+        self.tolerance = tolerance
         self.store_cost = []
+        self.momentum = momentum
+        self.gamma = 0.9
         for epoch in range(self.epochs):
+            np.random.seed(0)
             np.random.shuffle(self.training_data)
-            mini_batches = np.array(np.array_split(self.training_data, self.num_mini_batches))
-            for mini_batch in mini_batches:
-                a = feedforward(mini_batch, activation_function)
-                Neural_Network.update_mini_batch(mini_batch)
+            np.random.seed(0)
+            np.random.shuffle(self.training_target)
+            mini_batches_data = np.array(np.array_split(self.training_data, self.num_mini_batches))
+            mini_batches_target = np.array(np.array_split(self.training_target, self.num_mini_batches))
+            for mini_batch_data, mini_batch_target in zip(mini_batches_data,mini_batches_target):
+
+                a = Neural_Network.feedforward(mini_batch_data)
+                Neural_Network.update_mini_batch(mini_batch_data, mini_batch_target)
+
+                #initialise the velocity to zero
+                v_dw = 0
+                v_db = 0
+
+                #calls backpropagation to find the new gradient
+                dC_dw , dC_db = Neural_Network.backpropagation(mini_batch_data, mini_batch_target)
+
+                if (self.momentum == True):
+                    v_dw = v_dw * self.gamma + (1-self.gamma)* dC_dw
+                    v_db = v_db * self.gamma + (1-self.gamma)* dC_dw
+
+                    self.weights = self.weights - self.learning_rate * v_dw
+                    self.biases = self.biases - self.learning_rate * v_db
+                else:
+                    self.weights = self.weights - self.learning_rate * dC_dw
+                    self.biases = self.biases - self.learning_rate * dC_dw
 
             # calculate the cost of the epoch
-            cost = Neural_Network.cross_entropy_cost_function(a, t)
+            cost = Neural_Network.cross_entropy_cost_function(a, mini_batch_target)
+            print('The cost is:', cost)
             #store the cost
             self.store_cost = self.store_costs.append(cost)
-            #return a boolean if the tolerance is reached for early stopping
-            if self.store_cost.min() < tol:
+            accuracy = Neural_Network.classification_accuracy(a, mini_batch_target)
+            print('accuracy is :', accuracy)
+
+            if self.store_cost.min() < self.tolerance:
                 return
-
-
-
-    def update_mini_batch(self, mini_batch):
-
-        #delta_grad_w = [np.zeros(w.shape) for w in self.weights]
-        #delta_grad_b = [np.zeros(b.shape) for b in self.biases]
-
-        for data in mini_batch:
-            #calls backpropagation to find the new gradient or change
-            # in gradient
-            dC_dw , dC_db = Neural_Network.backpropagation(data)
-
-            self.weights = self.weights - self.learning_rate * dC_dw
-            self.biases = self.biases - self.learning_rate * dC_dw
-
-    def momentum(self):
-
-
+    def classification_accuracy(a , target):
+        for x, y in zip(a,target):
+            accuracy = 0
+            if x == y:
+                accuracy += 1
+        return accuracy
 
     def sigmoid_act(self, z):
         return 1.0/(1.0+np.exp(-z))
