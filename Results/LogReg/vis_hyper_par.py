@@ -55,8 +55,8 @@ def heat_training(df):
 
 def training(df_name):
     df = pd.read_csv(df_name)
-    g = sns.FacetGrid(data = df, row = "learning rate", col ='batch size', margin_titles= True)
-    g.map(sns.lineplot , x ='epoch', y='accuracy', hue='data set' )
+    g = sns.FacetGrid(data = df, row = "learning rate", col ='batch size', hue='data set', margin_titles= True)
+    g.map(sns.lineplot , 'epoch', 'accuracy' )
     plt.savefig(df_name[:-4] +'.pdf')
     plt.close('all')
 """
@@ -64,7 +64,7 @@ df = pd.read_csv("hyper_par.csv")
 heat_reg(df)
 heat_training(df)
 """
-filenames = ['logs_best_False.csv', 'logs_best_True.csv']
+filenames = ['logs_best_False5010.csv', 'logs_best_True5010.csv']
 for f in filenames:
     training(f)
 
