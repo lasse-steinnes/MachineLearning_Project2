@@ -63,22 +63,28 @@ class Neural_Network:
 
         # setting the first layer
         error_now = self.probabilities - self.data
+        now_weights = self.weights
+        # Might need these
+        #self.output_weights_gradient = np.matmul(self.a_h.T, error_output)
+        #self.output_bias_gradient = np.sum(error_output, axis=0)
 
         # looping through layers
         for i in reversed(range(1,len(f_z))): # f_z: (batch,nodes)
-            error_back = np.matmul(error_now, self.weights[i].T)* self.f_z[:,i]*(1 - self.f_z[:,i]) # prevlayer*number of targets (binary 1)
+
+            error_back = np.matmul(error_now, self.weights[i].T)* self.f_z[i]*(1 - self.f_z[i]) # prevlayer*number of targets (binary 1)
 
         # Using errors to calculate gradients
-            self.now_weights_gradient = np.matmul(self.f_z[:,i].T, error_now)
+            self.now_weights_gradient = np.matmul(self.f_z[i].T, error_now)
             self.now_bias_gradient = np.sum(error_now, axis=0)
 
             if self.lmbd > 0.0:
                 self.now_weights_gradient += self.lmbd * self.now_weights # or 1/n taking the mean, lambda is penalty on weights
-                self.now_weights_gradient += self.lmbd * self.back_weights
 
-            self.weights[:,i] -= self.eta * self.now_weights_gradient
+            self.weights[i] -= self.eta * self.now_weights_gradient
             self.biases[i] -= self.eta * self.now_bias_gradient
             error_now = error_back
+            now_weights = self.weights[i]
+        return self.now_weights_gradient,self.now_bias_gradient
 
 # must calculate these in backpropagation: dC_dw , dC_db
 
