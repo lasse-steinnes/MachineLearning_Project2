@@ -1,5 +1,5 @@
 import numpy as np
-import pandas
+import pandas as pd
 class OneHot:
     """
     class that provides one hot encoding for classification problems
