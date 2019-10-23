@@ -45,9 +45,16 @@ def grid_search(df):
 
 def compare(df, gamma, adapt_gamma, mini_batch_size, epochs , regularization, mi = 10**4, balanced = False, name="best", k_fold = 10):
     X, y = parse_data(df, "default payment next month", unbalanced= balanced )
+    if balanced:
+        X_e, y_e = parse_data(df, "default payment next month", unbalanced= False)
+        confusion_real = pd.DataFrame( np.zeros((3,6)),
+        columns =["0", "1", "precision", "recall", "specificity", "accuracy"],
+        index = ["0", "1","occurence"])
+        confusion_real.index.name = 'predicted class'
+        confusion_real.columns.name = 'actual class'
 
     clf_own = Log.LogisticRegression(max_iter = mi, mini_batch_size=mini_batch_size, epochs = epochs, learning_rate=gamma, adaptive_learning_rate=adapt_gamma,
-                                                            regualrization= regularization, logging = True)
+                                                            regularization= regularization, logging = True)
     clf_ex  = LogisticRegression(solver ='newton-cg')
     clf_sgd = SGDClassifier(loss = 'log')
 
@@ -62,9 +69,15 @@ def compare(df, gamma, adapt_gamma, mini_batch_size, epochs , regularization, mi
 
     for k in range(0,k_fold):
         X_trian, X_test, y_train, y_test = train_test_split(X,y, test_size =0.2)
+
         clf_own.fit(X_trian,y_train, split = True,fraction = 0.1, test = (X_test, y_test))
         own  += clf_own.evaluate(X_test,y_test)["accuracy"] 
-        confusion += clf_own.confusion_matrix(X_test,y_test)   
+        confusion += clf_own.confusion_matrix(X_test,y_test)  
+
+        if balanced:
+            X_b, _, y_b, _ = train_test_split(X_e, y_e, test_size= 0.2)
+            confusion_real += clf_own.confusion_matrix(X_b, y_b) 
+            print(confusion_real)
     
         clf_ex.fit(X_trian, y_train)
         ex  += clf_ex.score(X_test, y_test)      
@@ -99,33 +112,35 @@ def compare(df, gamma, adapt_gamma, mini_batch_size, epochs , regularization, mi
             "and of the SGD \\text{scikit} implementation is %.3f. Results are %i times corss validated.}" % (sgd/k_fold, k_fold)
             )
     f.write("\n \n")
-    confusion.to_latex(buf = f)
+    if balanced: 
+        confusion_real /= k_fold
+        confusion_real.to_latex(buf = f)
+    else: confusion.to_latex(buf = f)
     f.write("\n \n")
     f.close()
 
 def main():
     filename = "default of credit card clients.xls"
     df = pd.read_excel(filename, header=1)
+    df = df.drop(columns=["ID"])
+
 
     #comment out for hyperparameter search
     #WARNING: takes very long!
     #grid_search(df)
-
+    
     res = pd. read_csv("Results/LogReg/hyper_par.csv")
     for balance in [False, True]:
-        for gamma in [0.5, 0.1, 0.01]:
-            for mini_batch_size in [10, 30, 50]:
-
-                data = res[res["balanced"] == balance]
-                best = data[data["accuracy"] == data["accuracy"].max()]
-                gamma = best["learning rate"].mean()
-                adapt_gamma = best["adaptive learning"].iloc[0]
-                mini_batch_size = int(best["batch size"].mean())
-                epochs = 60#int(best["epochs"].mean())
-                regularization = ( best["regularization"].iloc[0], best["regularization parameter"].mean())
-                compare(df, gamma, adapt_gamma, mini_batch_size, epochs , regularization, balanced = balance,
-                            name="best_"+str(balance)+str(int(gamma*100))+str(mini_batch_size) , k_fold=10)
-
+        data = res[res["balanced"] == balance]
+        best = data[data["accuracy"] == data["accuracy"].max()]
+        gamma = best["learning rate"].mean()
+        adapt_gamma = best["adaptive learning"].iloc[0]
+        mini_batch_size = int(best["batch size"].mean())
+        epochs = int(best["epochs"].mean())
+        regularization = ( best["regularization"].iloc[0], best["regularization parameter"].mean())
+        compare(df, gamma, adapt_gamma, mini_batch_size, epochs , regularization, balanced = balance,
+                    name="best_"+str(balance)+'_real_data' , k_fold=10)
+    
 if __name__ == '__main__':
     main()
 
