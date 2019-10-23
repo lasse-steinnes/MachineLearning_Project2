@@ -25,7 +25,7 @@ class Neural_Network:
 
         # setup up a list of activation functions
         self.functions = [Neural_Network.sigmoid_act for i in range(0, self.layers)]
-        self.functions_prime = [autograd.gradient(l) for l in self.functions]
+        self.functions_prime = [autograd.gradient(l, 1) for l in self.functions]
         #self.activations = [np.random.randn(i, 1) for i in self.nodes[1:]]
 
     def feedforward(self, f_z):
@@ -40,13 +40,13 @@ class Neural_Network:
         for weight, bias, function in zip(self.weights, self.biases, self.functions):
             z = np.dot(weight, f_z) + bias
             self.z.append(z)
-            f_z = function(z)
+            f_z = function(self, z)
             self.activation.append(f_z)
             prob_term = np.exp(f_z)
             self.probabilities =  prob_term/np.sum(prob_term, axis = 1, keepdims = True)
         return self.f_z, self.probabilities
 
-    def backpropagation(self,f_z,data):
+    def backpropagation(self,f_z, target, momentum =True):
         '''
         Description:
         Backpropagation minimise the error and
@@ -66,10 +66,12 @@ class Neural_Network:
         - lambda is penalty for weigths
         ----------------------------------------
         '''
-        self.f_z, self.probabilities = feed_forward(f_z)
+        self.momentum = momentum
+       
+        self.f_z, self.probabilities = Neural_Network.feedforward(self, f_z)
 
         # setting the first layer
-        error_now = self.probabilities - self.data
+        error_now = self.probabilities - autograd.gradient(Neural_Network.cross_entropy_cost_function(self, self.f_z, target))
         now_weights = self.weights
         # Might need these
         #self.output_weights_gradient = np.matmul(self.a_h.T, error_output)
@@ -87,15 +89,27 @@ class Neural_Network:
             if self.lmbd > 0.0:
                 self.now_weights_gradient += self.lmbd * self.now_weights # or 1/n taking the mean, lambda is penalty on weights
 
-            self.weights[i] -= self.eta * self.now_weights_gradient
-            self.biases[i] -= self.eta * self.now_bias_gradient
+            #initialise the velocity to zero
+            v_dw = 0
+            v_db = 0
+            
+            if (self.momentum == True):
+                v_dw = v_dw * self.gamma + (1-self.gamma)* self.now_weights_gradient
+                v_db = v_db * self.gamma + (1-self.gamma)* self.now_bias_gradient
+
+                self.weights[i] = self.weights - self.eta * v_dw
+                self.biases[i] = self.biases - self.eta * v_db
+            else:    
+                self.weights[i] -= self.eta * self.now_weights_gradient
+                self.biases[i] -= self.eta * self.now_bias_gradient
+            
             error_now = error_back
             now_weights = self.weights[i]
         return self.now_weights_gradient,self.now_bias_gradient
 
 # must calculate these in backpropagation: dC_dw , dC_db
 
-    def SGD(self, cost_function, epochs =10, mini_batch_size = 10, learning_rate = 0.5, tolerance = 1, momentum =True):
+    def SGD(self, cost_function, epochs =10, mini_batch_size = 10, learning_rate = 0.5, tolerance = 1):
         """
         Stocastic gradient descent (SGD) should be run
         in each batch. It should be used by picking a few points
@@ -119,7 +133,7 @@ class Neural_Network:
         self.tol_reached = False
         self.tolerance = tolerance
         self.store_cost = []
-        self.momentum = momentum
+        
         self.gamma = 0.9
         for epoch in range(self.epochs):
             np.random.seed(0)
@@ -131,24 +145,13 @@ class Neural_Network:
             for mini_batch_data, mini_batch_target in zip(mini_batches_data,mini_batches_target):
 
                 a = Neural_Network.feedforward(mini_batch_data)
-                Neural_Network.update_mini_batch(mini_batch_data, mini_batch_target)
+                #Neural_Network.update_mini_batch(mini_batch_data, mini_batch_target)
 
-                #initialise the velocity to zero
-                v_dw = 0
-                v_db = 0
+                
 
                 #calls backpropagation to find the new gradient
                 dC_dw , dC_db = Neural_Network.backpropagation(mini_batch_data, mini_batch_target)
 
-                if (self.momentum == True):
-                    v_dw = v_dw * self.gamma + (1-self.gamma)* dC_dw
-                    v_db = v_db * self.gamma + (1-self.gamma)* dC_dw
-
-                    self.weights = self.weights - self.learning_rate * v_dw
-                    self.biases = self.biases - self.learning_rate * v_db
-                else:
-                    self.weights = self.weights - self.learning_rate * dC_dw
-                    self.biases = self.biases - self.learning_rate * dC_dw
 
             # calculate the cost of the epoch
             cost = Neural_Network.cross_entropy_cost_function(a, mini_batch_target)
@@ -165,7 +168,7 @@ class Neural_Network:
         for x, y in zip(a,target):
             if x == y:
                 accuracy += 1
-        return accuracy
+        return accuracy / len(target)
 
     def sigmoid_act(self, z):
         return 1.0/(1.0+np.exp(-z))
