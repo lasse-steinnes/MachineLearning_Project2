@@ -39,7 +39,7 @@ class LogisticRegression (SGD, OneHot):
 
         OneHot.__init__(self, dictonary=class_dict)      
         SGD.__init__(self, LogisticRegression.__cross_entropy, epochs =epochs, mini_batch_size = mini_batch_size,
-                     learning_rate = learning_rate, adaptive_learning_rate = adaptive_learning_rate, tolerance = tol, max_iter = max_iter)
+                     learning_rate = learning_rate, adaptive_learning_rate = adaptive_learning_rate, tolerance = tol)
         
         self.__fit_count = 0
         self.log = logging
@@ -91,8 +91,6 @@ class LogisticRegression (SGD, OneHot):
             #training without logging
             SGD.run_SGD(self, X, y_one_hot)
 
-        #reset for netx fit
-        self.iterations = 0
         #use best par
         if split:
             self.weights = best_weights
@@ -101,7 +99,7 @@ class LogisticRegression (SGD, OneHot):
     def predict(self, X, decoded = False):
         z = X@self.weights
         #softmax function
-        nom = np.sum( np.exp(z))
+        nom = np.vstack((np.sum( np.exp(z), axis= 1)) * self.classes)
         p = np.exp(z) / nom
         if decoded:
             return OneHot.decoding(self, p)
@@ -130,7 +128,7 @@ class LogisticRegression (SGD, OneHot):
     def __cross_entropy(self,W, X, y):
         z = X@W
         #softmax function
-        nom = np.sum( np.exp(z))
+        nom = np.vstack((np.sum( np.exp(z), axis= 1)) * self.classes)
         prediction = np.exp(z) / nom
         ret = - np.sum(np.where(y ==1, np.log(prediction), 0))/len(y)
         if self.reg[0] == 'l1':
@@ -149,7 +147,7 @@ class LogisticRegression (SGD, OneHot):
         W = np.zeros(self.weights.shape)
         W[0] = self.weights[0]
         z = X@W
-        nom = np.sum(np.exp(z))
+        nom = np.vstack((np.sum( np.exp(z), axis= 1)) * self.classes)
         pred = np.exp(z)/nom
         L0 = np.sum(np.log(pred))
         LB = np.sum(np.log(LogisticRegression.predict(self, X)))

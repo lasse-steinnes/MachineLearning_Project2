@@ -34,7 +34,7 @@ X_t, X_e, Y_t, y_e = train_test_split(X_t, Y_t, test_size = 0.3)
 cll = LR( **keys, max_iter=10**5, logging=True)
 cll.fit(X_t,Y_t, split=True, test = (X_e, y_e))
 acc = cll.evaluate(x_t,y_t)
-print(cll.weights)
+
 i = 1
 plt.figure(figsize=(10,10))
 plt.suptitle("%s $\gamma = %.4f$, batch size = %i" % (keys["adaptive_learning_rate"], keys["learning_rate"],keys["mini_batch_size"]), fontsize = 26)

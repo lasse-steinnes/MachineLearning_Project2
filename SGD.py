@@ -10,7 +10,8 @@ class SGD:
     '''
     
     def __init__(self, cost_function, epochs =10, mini_batch_size = 10, 
-                learning_rate = 0.5, adaptive_learning_rate = 'const', tolerance = 1, max_iter = 1000):
+                learning_rate = 0.5, adaptive_learning_rate = 'const', momentum = True,
+                tolerance = 1):
         """
         Stocastic gradient descent (SGD) should be run
         in each batch. It should be used by picking a few points
@@ -34,11 +35,11 @@ class SGD:
         self.learning_rate = learning_rate
 
         self.tolerance = tolerance
-        self.max_iter = max_iter
-        #tracks number of weight updates
-        self.iteration =0
         #tracks number of epochs
         self. time = 0
+        self.momentum = momentum
+        if momentum:
+            self.v = 0
 
         self.weights = None
         
@@ -52,7 +53,7 @@ class SGD:
         num_mini_batches = samples // self.mini_batch_size
         self.__old_weights = 100
        
-        while SGD.__check(self, self.iteration, self.__old_weights):
+        while SGD.__check(self, self.__old_weights):
             SGD.run_epoch(self,X, t,num_mini_batches)
             self.time += 1
         return self.weights
@@ -68,6 +69,8 @@ class SGD:
     
         self.delta = self.deriv_cost_function(self, self.weights, minibatch[0], minibatch[1])
         self.__old_weights = self.weights
+        if self.momentum:
+            pass
         if update_weight:
             self.weights = self.__old_weights - self.gamma * self.delta
 
@@ -80,7 +83,6 @@ class SGD:
         """
         for mini_batch in SGD.creat_mini_batch(self, X, t, num_mini_batches):
             SGD.run_minibatch(self, mini_batch)
-            self.iteration += 1
         self.time += 1
         
 
@@ -88,7 +90,7 @@ class SGD:
         """
         returns array with [... (X_n, t_n) ...] for 0 < n < num_mini_batches
         """
-        cur_seed = np.random.randint(self.epochs*self.max_iter + self.iteration)
+        cur_seed = np.random.randint(self.epochs*10**4)
         np.random.seed(cur_seed)
         np.random.shuffle(X)
         np.random.seed(cur_seed)
@@ -101,9 +103,6 @@ class SGD:
     
     #halting condition
     def __check(self, iteration, old_weights):
-        if iteration >= self.max_iter: 
-            print("Max. iter. reached")
-            return False
         if np.linalg.norm(old_weights - self.weights) < self.tolerance:
             print("tolerance reached")
             return False
@@ -115,4 +114,5 @@ class SGD:
         return gamma0 / ( gamma0*t +1)
         
     def __momentum(self, m0, t):
-        pass
+        self.v = self.v * m0 + (1-m0)*self.delta
+
