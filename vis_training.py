@@ -12,9 +12,11 @@ import sys
 from sklearn.model_selection import train_test_split
 
 keys = {"learning_rate" : 0.01, "adaptive_learning_rate" : 'decay',
-        "mini_batch_size": 10, "epochs" : 20, "regularization": ('l2', 1e-5)}
+        "mini_batch_size": 10, "epochs" : 20, "regularization": ('l2', 1e-5),
+        "momentum": True, "m0" : 1e-2}
 keys_type = {"learning_rate" : float, "adaptive_learning_rate" : str,
-        "mini_batch_size": int, "epochs" : int, "regularization": tuple}
+        "mini_batch_size": int, "epochs" : int, "regularization": tuple,
+        "momentum": bool, "m0" :float}
 i = 1
 while i < len(sys.argv):
     if keys_type[sys.argv[i]] == tuple :
