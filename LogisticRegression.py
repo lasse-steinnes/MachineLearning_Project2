@@ -21,7 +21,7 @@ class LogisticRegression (SGD, OneHot):
 
     """
     def __init__(self, classes = 2, class_dict = None, learning_rate = 0.01, adaptive_learning_rate = 'const',
-                 epochs = 10, mini_batch_size=10, max_iter=5000, tol = 1e-7, regualrization = ('l2', 0.01), logging = False):
+                 epochs = 10, mini_batch_size=10, max_iter=5000, tol = 1e-7, regularization = ('l2', 0.01), logging = False):
         """
         classes: #predicted classes
         class_dict: provide a dictonary which encodes the on hot mapping {value: index}
@@ -35,7 +35,7 @@ class LogisticRegression (SGD, OneHot):
         logging: if True keep log of all updates
         """
         self.classes = classes
-        self.reg = regualrization
+        self.reg = regularization
 
         OneHot.__init__(self, dictonary=class_dict)      
         SGD.__init__(self, LogisticRegression.__cross_entropy, epochs =epochs, mini_batch_size = mini_batch_size,
@@ -46,7 +46,7 @@ class LogisticRegression (SGD, OneHot):
         if logging:
             self. epochs = 1
             self.log_epochs = epochs
-            self.logs = pd.DataFrame(columns=["Fit nr","data set", "epoch", "batch size","learning rate", "mse", "r2", "accuracy"])
+            self.logs = pd.DataFrame(columns=["Fit nr","data set", "epoch", "batch size","learning rate", "mse", "r2", "accuracy", "cross entropy"])
             self.__log_calls = 0
 
     def fit(self, X, y, split = False , fraction = 0.2, test = None):
@@ -56,42 +56,41 @@ class LogisticRegression (SGD, OneHot):
         X = np.copy(X)
         y = np.copy(y)
         self.__fit_count += 1
-        if split:
+
+        if split and (test == None):
             X, X_test, y, y_test = train_test_split(X, y, test_size = fraction)
-        else:
-            if test == None:
-                X_test, y_test = X, y
-            else:
-                X_test, y_test = test
+            test = (X_test, y_test)
+                
         #convert to one hot encoding 
         y_one_hot = OneHot.encoding(self, y)
+
+        #setting up weights
         shape = X.shape
-        self.weights = 10**(-3)*np.random.randn(X.shape[1]* self.classes).reshape((shape[1], self.classes))  # initialization
+        self.weights = 10**(-6)*np.random.randn(shape[1]* self.classes).reshape((shape[1], self.classes))  # initialization
         best_weights = np.copy(self.weights)
         best_acc = 0
+        
         #sgd
-        if self.log:
+        if self.log or split:
+            #training with logging or splitting
             #set up necessarities for epoch
             num_mini_batches = shape[0] // self.mini_batch_size
             self.gamma = self.learning_rate
 
             for self.current_epoch in range(0, self.log_epochs +1):
                 #logging
-                score = LogisticRegression.evaluate(self, X, y)
-                sc =score["accuracy"]
-                LogisticRegression.__log_entry(self, score, self.gamma,self.mini_batch_size , "train")
-                if split or (test !=None):
-                    score = LogisticRegression.evaluate(self, X_test, y_test)
-                    LogisticRegression.__log_entry(self, score, self.gamma,self.mini_batch_size ,"test")
+                sc = LogisticRegression.__log_training(self, X, y, test)
                 #training one epoch at a time
                 SGD.run_epoch(self, X, y_one_hot, num_mini_batches)
 
                 if split and sc > best_acc:
                     best_weights = np.copy(self.weights)
-
-                print("Epoch %i " %self.current_epoch, "accuracy: %.2f" %  sc)
+                    best_acc = sc
+        
         else:
+            #training without logging
             SGD.run_SGD(self, X, y_one_hot)
+
         #reset for netx fit
         self.iterations = 0
         #use best par
@@ -114,8 +113,9 @@ class LogisticRegression (SGD, OneHot):
         pred_class = OneHot.decoding(self, prediction)
 
         scores = {'mse' : LogisticRegression.__MSE(self,pred_class, y),
-                  'r2': LogisticRegression.__R2(self,pred_class, y),
-                  'accuracy': LogisticRegression.__accuracy(self,pred_class, y)}
+                  'r2': LogisticRegression.__R2(self, X, y),
+                  'accuracy': LogisticRegression.__accuracy(self,pred_class, y),
+                  'cross entropy' : LogisticRegression.__cross_entropy(self, self.weights, X, OneHot.encoding(self, y))}
 
         return scores
 
@@ -132,11 +132,11 @@ class LogisticRegression (SGD, OneHot):
         #softmax function
         nom = np.sum( np.exp(z))
         prediction = np.exp(z) / nom
-        ret = - np.sum(np.where(y ==1,np.log(prediction), 0))/len(y)
+        ret = - np.sum(np.where(y ==1, np.log(prediction), 0))/len(y)
         if self.reg[0] == 'l1':
-            ret -=  self.reg[1] * np.sum(np.abs(W))
+            ret -=  float(self.reg[1]) * np.sum(np.abs(W))
         if self.reg[0] == 'l2':
-            ret -=  self.reg[1] * np.sum(np.linalg.norm(W, axis = 1))
+            ret -=  float(self.reg[1]) * np.sum(np.linalg.norm(W, axis = 1))
         return ret
 
     #MSE; R2; accuracy
@@ -144,10 +144,21 @@ class LogisticRegression (SGD, OneHot):
         res = prediction -y
         return np.dot(res,res)/len(res)
 
-    def __R2(self, prediction, y):
+    def __R2(self, X, y):
+        #from likelihood
+        W = np.zeros(self.weights.shape)
+        W[0] = self.weights[0]
+        z = X@W
+        nom = np.sum(np.exp(z))
+        pred = np.exp(z)/nom
+        L0 = np.sum(np.log(pred))
+        LB = np.sum(np.log(LogisticRegression.predict(self, X)))
+        return (L0-LB)/L0
+        """
         res_den = prediction -y
         res_nom = y - np.mean(y)
         return 1 - np.dot(res_den,res_den) / np.dot(res_nom, res_nom)
+        """
 
     def __accuracy(self, prediction, y):
         mask = prediction == y
@@ -164,3 +175,13 @@ class LogisticRegression (SGD, OneHot):
         self.logs = self.logs.append(temp)
         self.__log_calls += 1
         del temp
+
+    def __log_training(self, X, y, test = None):
+        score = LogisticRegression.evaluate(self, X, y)
+        LogisticRegression.__log_entry(self, score, self.gamma,self.mini_batch_size , "train")
+        if test != None:
+            score = LogisticRegression.evaluate(self, *test)
+            LogisticRegression.__log_entry(self, score, self.gamma,self.mini_batch_size ,"test")
+        sc =score["accuracy"]
+        print("Epoch %i " %self.current_epoch, "accuracy: %.2f" %  sc)
+        return sc

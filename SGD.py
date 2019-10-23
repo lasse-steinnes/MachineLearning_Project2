@@ -113,5 +113,6 @@ class SGD:
     #functions for adaptive learning rate
     def __decay(self, gamma0, t):
         return gamma0 / ( gamma0*t +1)
+        
     def __momentum(self, m0, t):
         pass
