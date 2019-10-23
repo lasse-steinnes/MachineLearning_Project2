@@ -1,8 +1,9 @@
 import pandas as pd 
 import numpy as np 
 from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
 
-from helper_functions import one_hot, model
+from helper_functions import parse_data
 import LogisticRegression as lr
 
 filename = "default of credit card clients.xls"
@@ -29,16 +30,5 @@ def test_model():
     assert np.all( X.shape == df.shape)
     assert np.all( X[:,0] - 1 == 0 )
 
-def test_logistic():
-    X = model(df.drop(columns =["default payment next month"]).to_numpy(),1)
-    y = df["default payment next month"].to_numpy()
 
-    X_trian, X_test, y_train, y_test = train_test_split(X,y,)
-    clf = lr.LogisticRegression(logging = True)
-    clf.fit(X_trian,y_train)
-    clf.evaluate(X_test,y_test)
-    print(clf.logs)
-    print(y_test[-5:],clf.predict(X_test[-5:], decoded=True))
-    print(clf.confusion_matrix(X_test,y_test), len(y_test))
 
-test_logistic()
