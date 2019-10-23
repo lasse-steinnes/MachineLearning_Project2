@@ -24,6 +24,8 @@ class Neural_Network:
 
         # setup up a list of activation functions
         self.functions = [Neural_Network.sigmoid_act for i in range(0, self.layers)]
+        
+        #self.activations = [np.random.randn(i, 1) for i in self.nodes[1:]]
 
     def feedforward(self, f_z):
         '''
@@ -32,9 +34,11 @@ class Neural_Network:
         as an input for the next layer, and so on for each layer,
         till we reach the output layer L.
         '''
+        self.activations = []
         for weight, bias, function in zip(self.weights, self.biases, self.functions):
             z = np.dot(weight, f_z) + bias
             f_z = function(z)
+            self.activation.append(f_z)
             prob_term = np.exp(f_z)
             self.probabilities =  prob_term/np.sum(prob_term, axis = 1, keepdims = True)
         return self.f_z, self.probabilities
@@ -71,7 +75,7 @@ class Neural_Network:
         # looping through layers
         for i in reversed(range(1,len(f_z))): # f_z: (batch,nodes)
 
-            error_back = np.matmul(error_now, self.weights[i].T)* self.f_z[i]*(1 - self.f_z[i]) # prevlayer*number of targets (binary 1)
+            error_back = np.matmul(error_now, self.weights[i].T)* self.activations[i]*(1 - self.f_z[i]) # prevlayer*number of targets (binary 1)
 
         # Using errors to calculate gradients
             self.now_weights_gradient = np.matmul(self.f_z[i].T, error_now)
@@ -154,8 +158,8 @@ class Neural_Network:
             if self.store_cost.min() < self.tolerance:
                 return
     def classification_accuracy(a , target):
+        accuracy = 0
         for x, y in zip(a,target):
-            accuracy = 0
             if x == y:
                 accuracy += 1
         return accuracy
