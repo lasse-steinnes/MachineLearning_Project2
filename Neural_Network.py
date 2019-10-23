@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-import numpy as np
+import autograd.numpy as np
+import autograd 
 
 class Neural_Network:
 
-    def __init__(self, training_data, number_of_nodes, eta = 0.01, lamda = 0.0):
+    def __init__(self, training_data, training_target, number_of_nodes, eta = 0.01, lamda = 0.0):
 
         self.training_data = training_data
-        self.training_data, self.training_target = zip(*self.training_data)
+        self.training_target = training_target
 
         self.nodes = number_of_nodes
         self.layers = len(number_of_nodes)
@@ -24,7 +25,7 @@ class Neural_Network:
 
         # setup up a list of activation functions
         self.functions = [Neural_Network.sigmoid_act for i in range(0, self.layers)]
-        
+        self.functions_prime = [autograd.gradient(l) for l in self.functions]
         #self.activations = [np.random.randn(i, 1) for i in self.nodes[1:]]
 
     def feedforward(self, f_z):
@@ -35,8 +36,10 @@ class Neural_Network:
         till we reach the output layer L.
         '''
         self.activations = []
+        self.z = []
         for weight, bias, function in zip(self.weights, self.biases, self.functions):
             z = np.dot(weight, f_z) + bias
+            self.z.append(z)
             f_z = function(z)
             self.activation.append(f_z)
             prob_term = np.exp(f_z)
@@ -75,7 +78,7 @@ class Neural_Network:
         # looping through layers
         for i in reversed(range(1,len(f_z))): # f_z: (batch,nodes)
 
-            error_back = np.matmul(error_now, self.weights[i].T)* self.activations[i]*(1 - self.f_z[i]) # prevlayer*number of targets (binary 1)
+            error_back = np.matmul(error_now, self.weights[i].T)* (self.functions_prime[i](self.z)) # prevlayer*number of targets (binary 1)
 
         # Using errors to calculate gradients
             self.now_weights_gradient = np.matmul(self.f_z[i].T, error_now)
