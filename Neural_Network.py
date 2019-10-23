@@ -36,8 +36,10 @@ class Neural_Network:
         till we reach the output layer L.
         '''
         self.activations = []
+        self.z = []
         for weight, bias, function in zip(self.weights, self.biases, self.functions):
             z = np.dot(weight, f_z) + bias
+            self.z.append(z)
             f_z = function(z)
             self.activation.append(f_z)
             prob_term = np.exp(f_z)
@@ -76,7 +78,7 @@ class Neural_Network:
         # looping through layers
         for i in reversed(range(1,len(f_z))): # f_z: (batch,nodes)
 
-            error_back = np.matmul(error_now, self.weights[i].T)* self.activations[i]*(self.functions_prime[i]) # prevlayer*number of targets (binary 1)
+            error_back = np.matmul(error_now, self.weights[i].T)* (self.functions_prime[i](self.z)) # prevlayer*number of targets (binary 1)
 
         # Using errors to calculate gradients
             self.now_weights_gradient = np.matmul(self.f_z[i].T, error_now)
