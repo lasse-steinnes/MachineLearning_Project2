@@ -10,7 +10,8 @@ class SGD:
     '''
     
     def __init__(self, cost_function, epochs =10, mini_batch_size = 10, 
-                learning_rate = 0.5, adaptive_learning_rate = 'const', momentum = True,
+                learning_rate = 0.5, adaptive_learning_rate = 'const',
+                momentum = True, m0 = 1e-2,
                 tolerance = 1):
         """
         Stocastic gradient descent (SGD) should be run
@@ -40,6 +41,7 @@ class SGD:
         self.momentum = momentum
         if momentum:
             self.v = 0
+            self.m0 = m0
 
         self.weights = None
         
@@ -70,7 +72,9 @@ class SGD:
         self.delta = self.deriv_cost_function(self, self.weights, minibatch[0], minibatch[1])
         self.__old_weights = self.weights
         if self.momentum:
-            pass
+            SGD.__momentum(self)
+            self.delta = self.v
+
         if update_weight:
             self.weights = self.__old_weights - self.gamma * self.delta
 
@@ -113,6 +117,8 @@ class SGD:
     def __decay(self, gamma0, t):
         return gamma0 / ( gamma0*t +1)
         
-    def __momentum(self, m0, t):
-        self.v = self.v * m0 + (1-m0)*self.delta
+
+    def __momentum(self):
+        self.v = self.v * self.m0 + (1-self.m0)*self.delta
+
 

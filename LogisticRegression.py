@@ -21,7 +21,10 @@ class LogisticRegression (SGD, OneHot):
 
     """
     def __init__(self, classes = 2, class_dict = None, learning_rate = 0.01, adaptive_learning_rate = 'const',
-                 epochs = 10, mini_batch_size=10, max_iter=5000, tol = 1e-7, regularization = ('l2', 0.01), logging = False):
+
+                 epochs = 10, mini_batch_size=10, max_iter=5000, tol = 1e-7, regularization = ('l2', 0.01),
+                 momentum = True, m0 = 1e-2, logging = False):
+
         """
         classes: #predicted classes
         class_dict: provide a dictonary which encodes the on hot mapping {value: index}
@@ -39,7 +42,10 @@ class LogisticRegression (SGD, OneHot):
 
         OneHot.__init__(self, dictonary=class_dict)      
         SGD.__init__(self, LogisticRegression.__cross_entropy, epochs =epochs, mini_batch_size = mini_batch_size,
-                     learning_rate = learning_rate, adaptive_learning_rate = adaptive_learning_rate, tolerance = tol)
+
+                     learning_rate = learning_rate, adaptive_learning_rate = adaptive_learning_rate, tolerance = tol,
+                     momentum = momentum, m0 = m0)
+
         
         self.__fit_count = 0
         self.log = logging
