@@ -1,0 +1,5 @@
+,layers,node,epoch,mini_batch_size,eta,lmbda,accuracy,cost_function,activation_function
+0,4,5,10,1,0.8,0.8,,cross entropy,sigmoid
+1,4,10,10,1,0.8,0.8,,cross entropy,sigmoid
+2,4,5,10,1,0.8,0.8,,cross entropy,sigmoid
+3,4,2,10,1,0.8,0.8,,cross entropy,sigmoid
