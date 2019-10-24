@@ -4,10 +4,12 @@ import autograd
 
 class Neural_Network:
 
-    def __init__(self, training_data, training_target, number_of_nodes, eta = 0.01, lmbd = 0.0):
+    def __init__(self, training_data, training_target, number_of_nodes, active_fn,
+                 eta = 0.01, lmbd = 0.0):
 
         self.training_data = training_data
         self.training_target = training_target
+        self.eta = eta
         self.lmbd = lmbd
         self.nodes = number_of_nodes
         self.layers = len(number_of_nodes)
@@ -22,10 +24,15 @@ class Neural_Network:
         to contain the weights
         '''
         self.weights = [np.random.randn(i, j) for j, i in zip(self.nodes[:-1], self.nodes[1:])]
-        print ('initialised weights', self.weights[2])
+       # print ('initialised weights', self.weights[2])
         # setup up a list of activation functions
-        self.functions = [Neural_Network.sigmoid_act for i in range(0, self.layers)]
-        self.functions_prime = [autograd.elementwise_grad(l, 1) for l in self.functions]
+        if active_fn == 'sigmoid':
+            self.functions = [Neural_Network.sigmoid_act for i in range(0, self.layers)]
+            self.functions_prime = [autograd.elementwise_grad(l, 1) for l in self.functions]
+        if active_fn == 'tanh': 
+            self.functions = [Neural_Network.tanh_act for i in range(0, self.layers)]
+            self.functions_prime = [autograd.elementwise_grad(l, 1) for l in self.functions]
+            
         #print('functions_prime', self.functions_prime)
         #self.activations = [np.random.randn(i, 1) for i in self.nodes[1:]]
 
@@ -48,8 +55,9 @@ class Neural_Network:
             self.activations.append(f_z)
         
         self.probabilities =  np.exp(f_z)/np.sum(np.exp(f_z), keepdims = True) #, axis = 1, keepdims = True)
-        print('probabilities', self.probabilities)
+        #print('probabilities', self.probabilities)
         return self.probabilities
+    
 
     def backpropagation(self, f_z, target):
         '''
@@ -109,7 +117,8 @@ class Neural_Network:
             if (self.momentum == True):
                 v_dw = v_dw * self.gamma + (1-self.gamma)* self.now_weights_gradient
                 v_db = v_db * self.gamma + (1-self.gamma)* self.now_bias_gradient
-
+                #print ('momentum', v_dw)
+                #print ('momentumb', v_db)
                 self.weights[i] = self.weights[i] - self.eta * v_dw
                 self.biases[i] = self.biases[i] - self.eta * v_db
             else:    
@@ -121,11 +130,11 @@ class Neural_Network:
             
             error_now = error_back
             self.now_weights = self.weights
-        return self.now_weights_gradient,self.now_bias_gradient
+        return self.now_weights_gradient, self.now_bias_gradient
 
 # must calculate these in backpropagation: dC_dw , dC_db
 
-    def SGD(self, cost_function, epochs =10, mini_batch_size = 10, learning_rate = 0.5, tolerance = 1, momentum = True):
+    def SGD(self, epochs, mini_batch_size, tolerance = 1, momentum = True):
         """
         Stocastic gradient descent (SGD) should be run
         in each batch. It should be used by picking a few points
@@ -141,11 +150,17 @@ class Neural_Network:
         'True' we are within the tolerance, 'False' we have not
         reached the max tolerance.
         """
-        self.cost_function = cost_function
+        
+        #self.cost_function = cost_function
         self.epochs = epochs
         self.momentum = momentum
         self.num_mini_batches = len(self.training_data) / mini_batch_size
-        self.eta = learning_rate
+        print('len of data', len(self.training_data))
+        print ('mini batch size', mini_batch_size)
+        print ('num of mini batches' , self.num_mini_batches)
+        
+        
+        
         self.tol_reached = False
         self.tolerance = tolerance
         self.store_cost = np.zeros(epochs) + 10
@@ -158,30 +173,33 @@ class Neural_Network:
             np.random.seed(0)
             np.random.shuffle(self.training_target)
             mini_batches_data = np.array(np.array_split(self.training_data, self.num_mini_batches))
-            #print (mini_batches_data)
             mini_batches_target = np.array(np.array_split(self.training_target, self.num_mini_batches))
+            #print ('mini batches data', mini_batches_data)
+            #print ('mini batches target', mini_batches_target)
+            
             for mini_batch_data, mini_batch_target in zip(mini_batches_data,mini_batches_target):
                 #print ('mini batch shape', mini_batch_data.shape)
-                a = Neural_Network.feedforward(self, mini_batch_data.T)
-                #Neural_Network.update_mini_batch(mini_batch_data, mini_batch_target)
-
+                #print ('len mb target', len(mini_batch_target))
+                #print('mini batch data', mini_batch_data)
+                #a = Neural_Network.feedforward(self, mini_batch_data.T)
                 #calls backpropagation to find the new gradient
                 dC_dw , dC_db = Neural_Network.backpropagation(self, mini_batch_data.T, mini_batch_target)
 
-            print ('a is: ', a)
+            #print ('a is: ', a)
             # calculate the cost of the epoch
-            cost = Neural_Network.cross_entropy_cost_function(self, a, mini_batch_target)
+            '''cost, a = Neural_Network.epoch_cost(self, self.training_data.T, self.training_target)
             print('The cost is:', cost)
             #store the cost
             self.store_cost[epoch] = cost
-            accuracy = Neural_Network.classification_accuracy(self, a, mini_batch_target)
+            accuracy = Neural_Network.classification_accuracy(self, a, self.training_target)
             print('accuracy is :', accuracy)
 
             if np.min(self.store_cost) < self.tolerance:
                 return
-            
+            '''
     def classification_accuracy(self, a , target):
         accuracy = 0
+        print('the len of target is:', len(target))
         a = np.where(a < 0.5, 0 , 1)
         for x, y in zip(a,target):
             #if (x > 0.5 and y > 0.5) or (x < 0.5 and y < 0.5):
@@ -196,6 +214,17 @@ class Neural_Network:
         e_z = np.exp(z)
         e_neg_z = np.exp(-z)
         return (e_z - e_neg_z) / (e_z + e_neg_z)
-
+    
+    def epoch_cost(self, data, target):
+        cost = 0.0
+        for f_z, t in zip(data, target):
+            for weight, bias, function in zip(self.weights, self.biases, self.functions):
+                z = np.dot(weight, f_z) + bias
+                f_z = function(self, z)
+            p_z =  np.exp(f_z)/np.sum(np.exp(f_z), keepdims = True)
+            
+            cost += Neural_Network.cross_entropy_cost_function(self, p_z, self.training_target)
+        
+        return cost, p_z
     def cross_entropy_cost_function (self, a, y):
         return np.sum(-y * np.log(a) + (1 - y) * np.log(1 - a))
