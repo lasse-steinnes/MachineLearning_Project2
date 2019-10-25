@@ -4,11 +4,16 @@ import autograd
 
 class Neural_Network:
 
-    def __init__(self, training_data, training_target, number_of_nodes, active_fn,
+    def __init__(self, training_data, training_target,test_data, test_target,
+                 validation_data, validation_target, number_of_nodes, active_fn,
                  eta = 0.01, lmbd = 0.0):
 
         self.training_data = training_data
         self.training_target = training_target
+        self.test_data = test_data
+        self.test_target = test_target
+        self.validation_data = validation_data
+        self.validation_target = validation_target
         self.eta = eta
         self.lmbd = lmbd
         self.nodes = number_of_nodes
@@ -155,19 +160,19 @@ class Neural_Network:
         self.epochs = epochs
         self.momentum = momentum
         self.num_mini_batches = len(self.training_data) / mini_batch_size
-        print('len of data', len(self.training_data))
-        print ('mini batch size', mini_batch_size)
-        print ('num of mini batches' , self.num_mini_batches)
-        
-        
-        
+        #print('len of data', len(self.training_data))
+        #print ('mini batch size', mini_batch_size)
+        #print ('num of mini batches' , self.num_mini_batches)
         self.tol_reached = False
         self.tolerance = tolerance
-        self.store_cost = np.zeros(epochs) + 10
-        
+        self.training_cost = np.zeros(epochs) + 10
+        self.training_accuracy = []
+        self.test_cost = []
+        self.test_accuracy = []
         self.gamma = 0.9
+        
         for epoch in range(self.epochs):
-            print ('epoch is:', epoch)
+            #print ('epoch is:', epoch)
             np.random.seed(0)
             np.random.shuffle(self.training_data)
             np.random.seed(0)
@@ -184,25 +189,36 @@ class Neural_Network:
                 #a = Neural_Network.feedforward(self, mini_batch_data.T)
                 #calls backpropagation to find the new gradient
                 dC_dw , dC_db = Neural_Network.backpropagation(self, mini_batch_data.T, mini_batch_target)
-
+            '''
             #print ('a is: ', a)
             # calculate the cost of the epoch
-            '''cost, a = Neural_Network.epoch_cost(self, self.training_data.T, self.training_target)
-            print('The cost is:', cost)
-            #store the cost
-            self.store_cost[epoch] = cost
+            cost, a = Neural_Network.epoch_cost(self, self.training_data.T, self.training_target)
+            print('The training cost is:', cost)
+            self.training_cost[epoch] = cost
+            
             accuracy = Neural_Network.classification_accuracy(self, a, self.training_target)
-            print('accuracy is :', accuracy)
-
+            print('The training accuracy is :', accuracy)
+            self.training_accuracy[epoch] = accuracy
+            
+            cost, a = Neural_Network.epoch_cost(self, self.test_data.T, self.test_target)
+            print('Test cost is:', cost)
+            self.test_cost[epoch] = cost
+            
+            accuracy = Neural_Network.classification_accuracy(self, a, self.test_target)
+            print('The test accuracy is :', accuracy)
+            self.test_accuracy[epoch] = accuracy
+            
             if np.min(self.store_cost) < self.tolerance:
                 return
-            '''
+            
+        self.validation_cost, a = Neural_Network.epoch_cost(self, self.validation_data.T, self.validation_target)
+        self.validation_accuracy = Neural_Network.classification_accuracy(self, a, self.validation_target)
+        '''
     def classification_accuracy(self, a , target):
         accuracy = 0
         print('the len of target is:', len(target))
-        a = np.where(a < 0.5, 0 , 1)
+        a = np.where(a < 0.5, 0 , 1) # set the output to 0 or 1 depending if the input is less or greater than 0.5
         for x, y in zip(a,target):
-            #if (x > 0.5 and y > 0.5) or (x < 0.5 and y < 0.5):
             if x == y:
                 accuracy += 1
         return accuracy / len(target)
@@ -221,10 +237,10 @@ class Neural_Network:
             for weight, bias, function in zip(self.weights, self.biases, self.functions):
                 z = np.dot(weight, f_z) + bias
                 f_z = function(self, z)
-            p_z =  np.exp(f_z)/np.sum(np.exp(f_z), keepdims = True)
-            
-            cost += Neural_Network.cross_entropy_cost_function(self, p_z, self.training_target)
-        
-        return cost, p_z
+                
+            a =  np.exp(f_z)/np.sum(np.exp(f_z), keepdims = True)
+            cost += Neural_Network.cross_entropy_cost_function(self, a, target)
+        return cost, a
+    
     def cross_entropy_cost_function (self, a, y):
         return np.sum(-y * np.log(a) + (1 - y) * np.log(1 - a))
