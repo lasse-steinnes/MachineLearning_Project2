@@ -243,9 +243,12 @@ class Neural_Network:
     def classification_accuracy(self, prediction, y):
         
         prediction = prediction.T
-        prediction = np.where(prediction < 0.5, 0 , 1)
-        print(prediction)
-        return np.sum(np.where(np.all(prediction==y, axis = 1), 1, 0))/ len(prediction)
+        #prediction = np.where(prediction < 0.5, 0 , 1)
+        prediction = np.argmax(prediction, axis =1)
+        y = np.argmax(y, axis =1)
+        return len(prediction[prediction == y])/len(y)
+        #print(pred)
+        #return np.sum(np.where(np.all(prediction==y, axis = 1), 1, 0))/ len(prediction)
         
 
         
