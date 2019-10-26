@@ -244,7 +244,7 @@ class Neural_Network:
         
         prediction = prediction.T
         prediction = np.where(prediction < 0.5, 0 , 1)
-        
+        print(prediction)
         return np.sum(np.where(np.all(prediction==y, axis = 1), 1, 0))/ len(prediction)
         
 
@@ -283,14 +283,14 @@ class Neural_Network:
         cost += Neural_Network.cross_entropy_cost_function(self, a, target)
         return cost, a
     
-    def cross_entropy_cost_function (self, a, y):
-        return np.sum(-y * np.log(a) + (1 - y) * np.log(1 - a))
+    def cross_entropy_cost_function (self, p, y):
+        return - np.sum(np.where(y==1, np.log(p), 0))/y.shape[1]
     
     def cross_entropy(self, W, b, a_h, y):
         z = np.matmul(W, a_h) + b
         a = self.functions[self.layers-1](self, z)
         p =  np.exp(a)/np.sum(np.exp(a), keepdims = True)
-        return  - np.sum(np.where(y==1, np.log(p), 0))/len(y) #np.sum(-y * np.log(p) + (1 - y) * np.log(1 - p))
+        return  - np.sum(np.where(y==1, np.log(p), 0))/y.shape[1] #np.sum(-y * np.log(p) + (1 - y) * np.log(1 - p))
     
 
         
