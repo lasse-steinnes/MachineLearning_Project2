@@ -8,36 +8,39 @@ Created on Mon Oct 21 16:36:24 2019
 import Neural_Network
 import numpy as np
 import pandas as pd
-
+import OneHot
+from sklearn.preprocessing import MinMaxScaler
 
 filename = "default of credit card clients.xls"
 df = pd.read_excel(filename, header=1)
 
-target = df[['default payment next month']].copy()
-data = df[['EDUCATION', 'SEX']].copy()
-print (data.head())
-print(target.head())
+target = (df[['default payment next month']].copy()).to_numpy()
+data = (df.drop(columns =['default payment next month', 'ID']).copy()).to_numpy()
+#print (data.head())
+#print(target.head())
 
+scaler = MinMaxScaler()
+data = scaler.fit_transform(data)
 
 curr_seed = 0 # the seed used for random shuffles
 
-nodes_schedule = np.array([[2,20,10,2],
-                 [2,10,5,2]])
+nodes_schedule = np.array([[23,20,10,2],
+                 [23,10,5,2]])
 
 etas = np.array([0.5, 0.8])
 lmbdas = np.array([0.5, 0.8])
 epochs_schedule = np.array([10])
-mini_batch_sizes = np.array([1])
+mini_batch_sizes = np.array([15])
 
 tolerance = 0.2
 momentum = True
 
 #initialise table of information
 toi = pd.DataFrame(columns = ['layers', 'nodes', 'epochs', 'mini_batch_size', 
-                   'eta', 'lmbda', 'accuracy', 'cost_function', 'activation_function'])
+                   'eta', 'lmbda', 'training_accuracy', 'test_accuracy','validation_accuracy', 'cost_function', 'activation_function'])
 
-toi_main = pd.DataFrame(columns = ['layers', 'node', 'epoch', 'mini_batch_size', 
-                   'eta', 'lmbda', 'accuracy', 'cost_function', 'activation_function'])
+toi_main = pd.DataFrame(columns = ['layers', 'nodes', 'epochs', 'mini_batch_size', 
+                   'eta', 'lmbda', 'training_accuracy', 'test_accuracy','validation_accuracy','cost_function', 'activation_function'])
 
 # 10-fold cross validation
 
@@ -46,6 +49,12 @@ np.random.seed(curr_seed)
 np.random.shuffle(data)
 np.random.seed(curr_seed)
 np.random.shuffle(target)
+
+print( target.shape)
+onehot = OneHot.OneHot()
+target = onehot.encoding(target[:,0])
+print (target.shape)
+
 
 data_folds = np.array(np.array_split(data, k+1))
 target_folds = np.array(np.array_split(target, k+1))
@@ -62,8 +71,8 @@ for i in range(k + 1):
     test_target  = target_folds[i]
     validation_target = target_folds[j]
     print ('train', training_data)
-    print ('tst', test_data)
-    print ('valida', validation_data)
+    print ('test', test_data)
+    print ('validation', validation_data)
     # store results and find the average
     
     for epochs in epochs_schedule:
@@ -76,15 +85,17 @@ for i in range(k + 1):
                                          nodes, 'sigmoid', eta, lmbda)                                                                     
                                  net.SGD(epochs, mini_batch_size, tolerance, momentum = True)
                                  
-                                 toi['layers'] = len(nodes)
-                                 toi['nodes'] = nodes
-                                 toi['epochs'] = epochs
-                                 toi['mini_batch_size'] = mini_batch_size
-                                 toi['eta'] = eta
-                                 toi['lmbda'] = lmbda
-                                 #toi['accuracy'] = net.accuracy
-                                 toi['cost_function'] = 'cross entropy'
-                                 toi['activation_function'] = 'sigmoid'
+                                 toi['layers'] = [len(nodes) for i in range(0, epochs)]
+                                 toi['nodes'] = [nodes for i in range(0, epochs)]
+                                 toi['epochs'] = [epochs  for i in range(0, epochs)]
+                                 toi['mini_batch_size'] = [mini_batch_size  for i in range(0, epochs)]
+                                 toi['eta'] = [eta  for i in range(0, epochs)]
+                                 toi['lmbda'] = [lmbda  for i in range(0, epochs)]
+                                 toi['training_accuracy'] = net.training_accuracy
+                                 toi['test_accuracy'] = net.test_accuracy
+                                 toi['validation_accuracy'] = net.validation_accuracy
+                                 toi['cost_function'] = ['cross entropy'  for i in range(0, epochs)]
+                                 toi['activation_function'] = ['sigmoid' for i in range(0, epochs)]
                                  toi_main = toi_main.append(toi)
     
     
