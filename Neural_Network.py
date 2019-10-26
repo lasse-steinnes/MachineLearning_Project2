@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import autograd.numpy as np
-import autograd 
+import autograd
 
 class Neural_Network:
 
@@ -35,10 +35,10 @@ class Neural_Network:
         if active_fn == 'sigmoid':
             self.functions = [Neural_Network.sigmoid_act for i in range(0, self.layers)]
             self.functions_prime = [autograd.elementwise_grad(l, 1) for l in self.functions]
-        if active_fn == 'tanh': 
+        if active_fn == 'tanh':
             self.functions = [Neural_Network.tanh_act for i in range(0, self.layers)]
             self.functions_prime = [autograd.elementwise_grad(l, 1) for l in self.functions]
-            
+
         #print('functions_prime', self.functions_prime)
         #self.activations = [np.random.randn(i, 1) for i in self.nodes[1:]]
 
@@ -59,8 +59,9 @@ class Neural_Network:
             f_z = function(self, z)
             #print ('f_z shape after feeding', f_z.shape)
             self.activations.append(f_z)
-        
-        self.probabilities =  np.exp(f_z)/np.sum(np.exp(f_z), keepdims = True) #, axis = 1, keepdims = True)
+
+        a, b = f_z
+        self.probabilities =  np.exp(f_z)/np.sum([np.exp(a),np.exp(b)], axis = 0, keepdims = True)
         #print('probabilities', self.probabilities)
         return self.probabilities
     
@@ -85,10 +86,10 @@ class Neural_Network:
         - lambda is penalty for weigths
         ----------------------------------------
         '''
-        
-       
+
+
         self.probabilities = Neural_Network.feedforward(self, f_z)
-        
+
         # setting the first layer self, W, b, a_h, y):
         '''
         error_W = autograd.grad(Neural_Network.cross_entropy, 1)(self, self.weights[self.layers-2],
@@ -96,37 +97,37 @@ class Neural_Network:
         error_b = autograd.grad(Neural_Network.cross_entropy, 2)(self, self.weights[self.layers-2],
                                self.biases[self.layers-2] , self.activations[self.layers-2], target)
         '''
-        
+
         #print ('activation of last hidden layer', self.activations[self.layers-2].shape)
-        
+
         delta = autograd.grad(Neural_Network.cross_entropy, 2)(self, self.weights[self.layers-2],
                                self.biases[self.layers-2] , self.activations[self.layers-2], target)
-        
+
         self.current_weights = self.weights #current weights before adjustment
-        
+
         #print ('delta shape', delta.shape)
-        
+
         # looping through layers
         for i in reversed(range(1, self.layers)): # f_z: (batch,nodes)
-            
+
             #print('activations', self.activations[i-1].T.shape)
             #print ('layers', self.layers)
             #print ('i layer', i)
             #print ('self.weights[i] shape', self.weights[i].shape)
             #print('error now shape', error_now.shape)
             #print('activations shape', self.activations[i].T.shape)
-           
+
             self.activations[i-1] = np.mean(self.activations[i-1], axis = 1, keepdims = True)
             #print ('delta shape', delta.shape)
             #print('activations after mean', self.activations[i-1].T.shape)
             delta_W = np.matmul(delta, self.activations[i-1].T)
-            
-            
+
+
             #self.now_bias_gradient = np.sum(error_now * prime, axis = 0, keepdims = True).T
             #print ('bias grad shape', self.now_bias_gradient.shape)
             #print('weights grad shape', self.now_weights_gradient.shape)
-            
-            
+
+
             if self.lmbd > 0.0:
                 #print ('now_weights shape', self.now_weights[i].shape)
                 delta_W += self.lmbd * self.current_weights[i-1] # or 1/n taking the mean, lambda is penalty on weights
@@ -134,21 +135,21 @@ class Neural_Network:
             #initialise the velocity to zero
             v_dw = 0
             v_db = 0
-            
+
             if (self.momentum == True & i == self.layers-1):
                 v_dw = v_dw * self.gamma + (1-self.gamma)* delta_W
                 v_db = v_db * self.gamma + (1-self.gamma)* delta
-                
+
                 #print ('momentum', v_dw)
                 #print ('momentumb', v_db)
                 #print ('biases i shape before momentum', self.biases[i].shape)
                 self.weights[i-1] -=  self.eta * v_dw
                 self.biases[i-1] -= self.eta * v_db
                 #print ('biases i shape', self.biases[i].shape)
-            else:    
+            else:
                 self.weights[i-1] -= self.eta * delta_W
                 self.biases[i-1] -= self.eta * delta
-                
+
             #print ('weights transp ', self.current_weights[i-2].T.shape)
             #print ('error W', error_W.shape)
             #error_W = np.matmul(self.now_weights[i-2].T, error_W)
@@ -158,8 +159,8 @@ class Neural_Network:
                 a_prime = a_prime.mean(axis = 1, keepdims = True)
                 #print('prime', a_prime)
                 delta = np.matmul(self.current_weights[i-1].T, delta) * a_prime
-                      
-        return 
+
+        return
 
 # must calculate these in backpropagation: dC_dw , dC_db
 
@@ -179,7 +180,7 @@ class Neural_Network:
         'True' we are within the tolerance, 'False' we have not
         reached the max tolerance.
         """
-        
+
         #self.cost_function = cost_function
         self.epochs = epochs
         self.momentum = momentum
@@ -194,7 +195,7 @@ class Neural_Network:
         self.test_cost = np.zeros(epochs)
         self.test_accuracy = np.zeros(epochs)
         self.gamma = 0.9
-        
+
         for epoch in range(self.epochs):
             print ('epoch is:', epoch)
             np.random.seed(0)
@@ -203,12 +204,12 @@ class Neural_Network:
             np.random.shuffle(self.training_target)
             mini_batches_data = np.array(np.array_split(self.training_data, self.num_mini_batches))
             mini_batches_target = np.array(np.array_split(self.training_target, self.num_mini_batches))
-            
+
             #print ('mini batches data', mini_batches_data)
             #print ('mini batches target', mini_batches_target)
-            
+
             for mini_batch_data, mini_batch_target in zip(mini_batches_data,mini_batches_target):
-                
+
                 #print ('mini batch shape', mini_batch_data.shape)
                 #print ('len mb target', len(mini_batch_target))
                 #print('mini batch data', mini_batch_data)
@@ -222,26 +223,26 @@ class Neural_Network:
             print ('a shape', a.shape)
             print('The training cost is:', cost)
             self.training_cost[epoch] = cost
-            
+
             accuracy = Neural_Network.classification_accuracy(self, a, self.training_target)
             print('The training accuracy is :', accuracy)
             self.training_accuracy[epoch] = accuracy
-            
+
             cost, a = Neural_Network.epoch_cost(self, self.test_data.T, self.test_target.T)
             print('Test cost is:', cost)
             self.test_cost[epoch] = cost
-            
+
             accuracy = Neural_Network.classification_accuracy(self, a, self.test_target)
             print('The test accuracy is :', accuracy)
             self.test_accuracy[epoch] = accuracy
-        
+
         self.validation_cost, a = Neural_Network.epoch_cost(self, self.validation_data.T, self.validation_target.T)
         self.validation_accuracy = Neural_Network.classification_accuracy(self, a, self.validation_target)
-        
+
             #if np.min(self.test_cost) < self.tolerance:
             #    return
     def classification_accuracy(self, prediction, y):
-        
+
         prediction = prediction.T
         #prediction = np.where(prediction < 0.5, 0 , 1)
         prediction = np.argmax(prediction, axis =1)
@@ -249,10 +250,10 @@ class Neural_Network:
         return len(prediction[prediction == y])/len(y)
         #print(pred)
         #return np.sum(np.where(np.all(prediction==y, axis = 1), 1, 0))/ len(prediction)
-        
 
-        
-    '''    
+
+
+    '''
     def classification_accuracy(self, a , target):
         accuracy = 0
         #print('the len of target is:', len(target))
@@ -271,7 +272,7 @@ class Neural_Network:
         e_z = np.exp(z)
         e_neg_z = np.exp(-z)
         return (e_z - e_neg_z) / (e_z + e_neg_z)
-    
+
     def epoch_cost(self, f_z, target):
         cost = 0.0
         #for f_z, t in zip(data, target):
@@ -281,19 +282,16 @@ class Neural_Network:
             #print('f_z shape', f_z.shape)
             z = np.dot(weight, f_z) + bias
             f_z = function(self, z)
-            
+
         a =  np.exp(f_z)/np.sum(np.exp(f_z), keepdims = True)
         cost += Neural_Network.cross_entropy_cost_function(self, a, target)
         return cost, a
-    
+
     def cross_entropy_cost_function (self, p, y):
         return - np.sum(np.where(y==1, np.log(p), 0))/y.shape[1]
-    
+
     def cross_entropy(self, W, b, a_h, y):
         z = np.matmul(W, a_h) + b
         a = self.functions[self.layers-1](self, z)
         p =  np.exp(a)/np.sum(np.exp(a), keepdims = True)
         return  - np.sum(np.where(y==1, np.log(p), 0))/y.shape[1] #np.sum(-y * np.log(p) + (1 - y) * np.log(1 - p))
-    
-
-        
