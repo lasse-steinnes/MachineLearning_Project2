@@ -28,7 +28,7 @@ while i < len(sys.argv):
 
 
 df = pd.read_excel("/home/lukas/Documents/MachineLearning_Project2/default of credit card clients.xls", header = 1)
-df = df.drop(columns =["ID"])
+df = df.drop(columns =["ID", "SEX",	"EDUCATION", "MARRIAGE",	"AGE", "BILL_AMT1",	"BILL_AMT2",	"BILL_AMT3",	"BILL_AMT4",	"BILL_AMT5",	"BILL_AMT6"])
 
 X,y = parse_data(df, "default payment next month", unbalanced=False) 
 X_t, x_t, Y_t, y_t = train_test_split(X, y, test_size = 0.2)
@@ -57,3 +57,16 @@ for key, val in acc.items():
     i += 1
 plt.tight_layout(pad = 1.5, rect = (0, 0, 1, 0.95))
 plt.show()
+
+df = cll.logs
+df = df[df["data set"]=='test']
+y = df["accuracy"].to_numpy()
+x = df["epoch"].to_numpy()
+plt.figure(figsize=(10,10))
+plt.plot(x[1:],y[1:])
+plt.ylim(0.78,0.825)
+plt.xlabel("Epochs", fontsize =26)
+plt.ylabel("Accuracy", fontsize = 26)
+plt.xticks(fontsize =24)
+plt.yticks(fontsize =24)
+plt.savefig("Results/LogReg/training_%i_%s_%i.pdf" % (keys["mini_batch_size"] , keys["adaptive_learning_rate"], int(10*keys["m0"])))
