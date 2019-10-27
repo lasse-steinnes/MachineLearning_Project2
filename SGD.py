@@ -74,6 +74,7 @@ class SGD:
         if self.momentum:
             SGD.__momentum(self)
             self.delta = self.v
+
         if update_weight:
             self.weights = self.__old_weights - self.gamma * self.delta
 
@@ -116,6 +117,8 @@ class SGD:
     def __decay(self, gamma0, t):
         return gamma0 / ( gamma0*t +1)
         
+
     def __momentum(self):
         self.v = self.v * self.m0 + (1-self.m0)*self.delta
+
 
