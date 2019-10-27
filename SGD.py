@@ -68,15 +68,20 @@ class SGD:
             self.gamma = self.learning_rate_adaption(self, self.learning_rate, self.time)
         except:
             self.gamma = self.learning_rate
-    
-        self.delta = self.deriv_cost_function(self, self.weights, minibatch[0], minibatch[1])
-        self.__old_weights = self.weights
+
+        try:#when wheigths are set to be all inputs
+          self.delta = self.deriv_cost_function( *self.weights)
+        except:
+            self.delta = self.deriv_cost_function(self, self.weights, minibatch[0], minibatch[1])
+        
         if self.momentum:
             SGD.__momentum(self)
             self.delta = self.v
+        self.delta *= self.gamma 
 
         if update_weight:
-            self.weights = self.__old_weights - self.gamma * self.delta
+            self.__old_weights = self.weights
+            self.weights = self.__old_weights - self.delta
 
         
 
