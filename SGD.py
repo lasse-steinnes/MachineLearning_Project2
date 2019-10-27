@@ -69,9 +69,9 @@ class SGD:
         except:
             self.gamma = self.learning_rate
 
-        try:#when wheigths are set to be all inputs
-          self.delta = self.deriv_cost_function( *self.weights)
-        except:
+        if type(self.weights) == tuple:#when wheigths are set to be all inputs
+            self.delta = self.deriv_cost_function( *self.weights)
+        else:
             self.delta = self.deriv_cost_function(self, self.weights, minibatch[0], minibatch[1])
         
         if self.momentum:
