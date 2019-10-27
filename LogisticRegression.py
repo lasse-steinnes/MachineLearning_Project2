@@ -105,8 +105,8 @@ class LogisticRegression (SGD, OneHot):
     def predict(self, X, decoded = False):
         z = X@self.weights
         #softmax function
-        nom = np.vstack((np.sum( np.exp(z), axis= 1)) * self.classes)
-        p = np.exp(z) / nom
+        nom = [np.sum( np.exp(z), axis= 1) for i in range(self.classes)]
+        p = np.exp(z) / np.transpose(nom)
         if decoded:
             return OneHot.decoding(self, p)
         return p
@@ -134,9 +134,9 @@ class LogisticRegression (SGD, OneHot):
     def __cross_entropy(self,W, X, y):
         z = X@W
         #softmax function
-        nom = np.vstack((np.sum( np.exp(z), axis= 1)) * self.classes)
-        prediction = np.exp(z) / nom
-        ret = - np.sum(np.where(y ==1, np.log(prediction), 0))/len(y)
+        nom = np.array([np.sum( np.exp(z), axis= 1) for i in range(self.classes)])
+        prediction = np.exp(z) / nom.T
+        ret = - np.sum(np.where(y==1, np.log(prediction), 0) )/len(y)
         if self.reg[0] == 'l1':
             ret -=  float(self.reg[1]) * np.sum(np.abs(W))
         if self.reg[0] == 'l2':
@@ -153,8 +153,8 @@ class LogisticRegression (SGD, OneHot):
         W = np.zeros(self.weights.shape)
         W[0] = self.weights[0]
         z = X@W
-        nom = np.vstack((np.sum( np.exp(z), axis= 1)) * self.classes)
-        pred = np.exp(z)/nom
+        nom = [np.sum( np.exp(z), axis= 1) for i in range(self.classes)]
+        pred = np.exp(z)/np.transpose(nom)
         L0 = np.sum(np.log(pred))
         LB = np.sum(np.log(LogisticRegression.predict(self, X)))
         return (L0-LB)/L0
