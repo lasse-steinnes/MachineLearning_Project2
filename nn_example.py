@@ -23,8 +23,8 @@ nn = Neural_Network([23,  40,       2],
                     'classification', regularization=('l2', 1e-2))
 
 nn.training(X_train, y_train,
-            200, mini_batch_size=15,
-            eta =0.01, eta_schedule='decay',
+            50, mini_batch_size=30,
+            eta =0.1, eta_schedule=('decay', 0.1),
             momentum=True, gamma = 0.3,
             lmbd=0.0, tolerance=10**-4,
             test_data=(X_test, y_test))

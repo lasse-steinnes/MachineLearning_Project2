@@ -129,7 +129,7 @@ class Neural_Network:
                 delta = np.matmul(current_weights[i-1].T, delta) * a_prime
 
     def training(self, data, target, epochs, mini_batch_size,
-            eta = 0.5, eta_schedule = 'decay',
+            eta = 0.5, eta_schedule = ('decay',0.1),
             momentum = True, gamma = 0.1,
             lmbd = 0.1, tolerance = 1e-3,
             test_data = None,
@@ -138,25 +138,16 @@ class Neural_Network:
         training NN
         data shape (#samples, #features)
         target shape (#samples, #output nodes)
-
-        Stocastic gradient descent (SGD) should be run
-        in each batch. It should be used by picking a few points
-        at random and sending them through the network. At
-        which point in the last layer the gradients are found
-        of these points and a new parameter (weight and bias)
-        is found to minimise the cost function.
-
-        This function takes the cost function, learning rate and
-        the parameter.
-        This function outputs the new updated parameter and a
-        boolean refering to if the tolerance has been reached.
-        'True' we are within the tolerance, 'False' we have not
-        reached the max tolerance.
+        eta: learning rate
+        eta_schedule: (scheme, cycles) 'decay' or 'const', if 'decay' the time is multiplied with cycles
+        momentum, gamma, set momentum to true, gamma strength of momentum (gamma=0 ==momentum =False)
+        lmbd fraction of old weights taken into change
+        test_data/validation_data  (inut, outpur ); input shape (#samples, #features), output shape (#samples, #output nodes)
         """
         data = np.copy(data)
         target = np.copy(target)
         self.gradient = SGD( self.cost_function, epochs = epochs, mini_batch_size = mini_batch_size, 
-                learning_rate = eta, adaptive_learning_rate = eta_schedule,
+                learning_rate = eta, adaptive_learning_rate = eta_schedule[0],
                 momentum = momentum, m0 = gamma)
         
         self.lmbd = lmbd
@@ -174,7 +165,7 @@ class Neural_Network:
                 #calls backpropagation to find the new gradient
                 Neural_Network.__backpropagation(self, mini_batch_data.T, mini_batch_target.T)
             
-            self.gradient.time += 1 #update time for decay
+            self.gradient.time += float(eta_schedule[1])* 1 #update time for decay
 
             # calculate the cost of the epoch
             Neural_Network.__epoch_output(self, data, target, name = 'train')
