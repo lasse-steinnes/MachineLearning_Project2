@@ -5,7 +5,7 @@ from SGD import SGD
 import pandas as pd
 class Neural_Network:
 
-    def __init__(self, number_of_nodes, active_fn, cost_function, log = True):
+    def __init__(self, number_of_nodes, active_fn, cost_function,regularization =('none', 1e-15), log = True):
         """
         Initialize a NN
         number of nodes: -list of number of nodes including input and output layer
@@ -13,19 +13,21 @@ class Neural_Network:
         active_fn:       - list of activation functions
                          - strings 'sigmoid', 'tanh', 'relu' and 'softmax' are supported
         cost_function:   - either str 'mse' or 'classification' using cross entropy
+        regularization:  - regularization schme for cost function, either 'l1' or 'l2' and strenght
         log:             - creats table of information and keeps track of evolution of NN during training
 
         Methods:
         -feedforward:   claculate output of NN based on data shape (#features, #samples)
         -training:      trains the NN, usage of SGD class and backpropagation
         """
+
         self.nodes = number_of_nodes
         self.layers = len(number_of_nodes)
 
         #initalze biases shape (#nodes l, 1)
-        self.biases = [np.random.rand(i, 1)*0.01+0.01 for i in self.nodes[1:]]
+        self.biases = [np.random.randn(i, 1) for i in self.nodes[1:]]
         #initalize weights shape (#nodes l+1, #nodes l)
-        self.weights = [np.random.rand(i, j)*0.01 +0.01 for j, i in zip(self.nodes[:-1], self.nodes[1:])]
+        self.weights = [np.random.randn(i, j) for j, i in zip(self.nodes[:-1], self.nodes[1:])]
 
         # setup up a list of activation functions only one literal
         if active_fn == 'sigmoid':
@@ -37,6 +39,8 @@ class Neural_Network:
             self.functions = [d[name] for name in active_fn]
         #derivative of layer activation functions
         self.functions_prime = [autograd.elementwise_grad(l, 1) for l in self.functions]
+        
+        self.reg = regularization
 
         # set up cost function
         if cost_function == 'classification':
@@ -67,6 +71,7 @@ class Neural_Network:
         as an input for the next layer, and so on for each layer,
         till we reach the output layer L.
         '''
+        data = np.copy(data)
         self.activations = [data]
         self.z = [0]
         a = data
@@ -98,6 +103,8 @@ class Neural_Network:
         - lambda is penalty for weigths
         ----------------------------------------
         '''
+        f_z = np.copy(f_z)
+        target = np.copy(target)
         Neural_Network.feedforward(self, f_z)
         #set all inputs for cost function
         self.gradient.weights = (self, self.biases[self.layers -2], target)
@@ -146,6 +153,8 @@ class Neural_Network:
         'True' we are within the tolerance, 'False' we have not
         reached the max tolerance.
         """
+        data = np.copy(data)
+        target = np.copy(target)
         self.gradient = SGD( self.cost_function, epochs = epochs, mini_batch_size = mini_batch_size, 
                 learning_rate = eta, adaptive_learning_rate = eta_schedule,
                 momentum = momentum, m0 = gamma)
@@ -207,16 +216,28 @@ class Neural_Network:
     def cross_entropy(self, b, y):
         z = np.matmul(self.weights[self.layers -2], self.activations[self.layers -2 ]) + b
         a = self.functions[self.layers-2](self, z)
-        return  - np.sum(np.where(y==1, np.log(a), 0))/y.shape[1] 
-        #return - np.sum( np.matmul(np.log(a), y.T))/y.shape[1]
-    
+        ret = - np.sum(np.where(y==1, np.log(a), 0) )/y.shape[1]
+        
+        if self.reg[0] == 'l1':
+            ret -=  float(self.reg[1]) *np.sum(np.abs(b), axis =1).mean()
+        if self.reg[0] == 'l2':
+            ret -=  float(self.reg[1]) * np.linalg.norm(b, axis =1).mean()
+        return ret
+        
     def mse(self, b, W, a_h, y):
         z = np.matmul(W, a_h) + b
         a = self.functions[self.layers-2](self, z)
-        return np.dot(a -y, a - y)/len(y)
+        ret = np.dot(a -y, a - y)/len(y)
+        if self.reg[0] == 'l1':
+            ret -=  float(self.reg[1]) * np.sum(np.abs(b), axis = 1).mean()
+        if self.reg[0] == 'l2':
+            ret -=  float(self.reg[1]) * np.linalg.norm(b,axis = 1).mean()
+        return ret
 
     #make table of information
     def __epoch_output(self, data, target, name='test'):
+        data = np.copy(data)
+        target = np.copy(target)
         print('Current epoch: ', self.epoch)
         cost, a = Neural_Network.epoch_cost(self, data.T, target.T)
         print('The %s cost is: %.4f' % (name, cost))

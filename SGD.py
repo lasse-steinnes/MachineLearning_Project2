@@ -96,6 +96,8 @@ class SGD:
         
 
     def creat_mini_batch(self,X, t, num_mini_batches):
+        X = np.copy(X)
+        t = np.copy(t) 
         """
         returns array with [... (X_n, t_n) ...] for 0 < n < num_mini_batches
         """

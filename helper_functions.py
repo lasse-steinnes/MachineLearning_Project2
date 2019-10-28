@@ -3,7 +3,7 @@ functions for parsing data frame from credit card data
 """
 import numpy as np 
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 def model(data, power):
     """
@@ -38,7 +38,7 @@ def parse_data(df, target, power = 1, unbalanced = True):
 
     y = df[target].to_numpy()
     df  = df.drop(columns=[target])
-    scaler = MinMaxScaler()
+    scaler = StandardScaler() # MinMaxScaler()
     df = pd.DataFrame(scaler.fit_transform(df))
     pre_X = df.to_numpy()   
 

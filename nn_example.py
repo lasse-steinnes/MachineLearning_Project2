@@ -15,16 +15,16 @@ X = X[: ,1:]#drop cont column  from model
 onehot = OneHot()
 y_onehot = onehot.encoding(y)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y_onehot, test_size =0.2)
-X_test, X_eval, y_test, y_eval = train_test_split(X_test, y_test, test_size = 0.1)
+X_train, X_test, y_train, y_test = train_test_split(X, y_onehot, test_size =0.1)
 
-nn = Neural_Network([23,  30,       50,      60,     100,   70,      30,    20,       10,       5,      10,     4,         2],
-                         ['tanh',   'tanh', 'relu', 'relu', 'tanh', 'tanh', 'sigmoid','sigmoid', 'relu','relu', 'tanh', 'softmax'],
-                    'classification')
+
+nn = Neural_Network([23,  40,       2],
+                         ['tanh',  'softmax'],
+                    'classification', regularization=('l2', 1e-2))
 
 nn.training(X_train, y_train,
-            20, mini_batch_size=30,
-            eta =0.001, eta_schedule='decay',
+            200, mini_batch_size=15,
+            eta =0.01, eta_schedule='decay',
             momentum=True, gamma = 0.3,
             lmbd=0.0, tolerance=10**-4,
             test_data=(X_test, y_test))
@@ -44,9 +44,10 @@ plt.xlabel("epochs", fontsize = 22)
 plt.ylabel('accuracy', fontsize = 22)
 plt.xticks(fontsize =20)
 plt.yticks(fontsize =20)
+plt.tight_layout()
 plt.show()
 
-p = nn.feedforward(X_eval.T)
-print(nn.z[7])
-print(p.T)
+X_eval, y_eval = parse_data(df, "default payment next month", unbalanced= False)
+y_eval = onehot.encoding(y_eval)
+p = nn.feedforward(X_eval[:,1:].T)
 print(onehot.confusion(p.T, np.argmax(y_eval, axis =1)))
