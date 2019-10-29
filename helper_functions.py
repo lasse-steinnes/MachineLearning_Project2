@@ -150,5 +150,7 @@ def downsampler(data,target):
     dtarget = np.hstack((targetT[i_C1], targetT[i_C0_dsample]))
     # return the target in right dimensions
     dtarget = dtarget.reshape(-1,1)
-    #print(dtarget)
-    return dtarget
+
+    # Downsampling data
+    ddata = np.vstack((data[i_C1],data[i_C0_dsample]))
+    return dtarget,ddata
