@@ -28,7 +28,7 @@ class Neural_Network:
         e.g if the layers have 10,5,2 nodes, then it creates 5x10 and 2x5 matrices
         to contain the weights
         '''
-        self.weights = [np.random.randn(i, j)*1e-2 for j, i in zip(self.nodes[:-1], self.nodes[1:])]
+        self.weights = [np.random.randn(i, j)*1e-2 for j, i in zip(self.nodes[:-1], self.nodes[1:])] # When one hot encoded should be bigger
         #print ('length of init weights', len(self.weights))
        # print ('initialised weights', self.weights[2])
         # setup up a list of activation functions
@@ -64,7 +64,7 @@ class Neural_Network:
         self.probabilities =  np.exp(f_z)/np.sum([np.exp(a),np.exp(b)], axis = 0, keepdims = True)
         #print('probabilities', self.probabilities)
         return self.probabilities
-    
+
 
     def backpropagation(self, f_z, target):
         '''
@@ -287,8 +287,11 @@ class Neural_Network:
         cost += Neural_Network.cross_entropy_cost_function(self, a, target)
         return cost, a
 
-    def cross_entropy_cost_function (self, p, y):
+    def cross_entropy_cost_function(self, p, y):
         return - np.sum(np.where(y==1, np.log(p), 0))/y.shape[1]
+
+    def cost_function_regression(self,y,target):
+        return 0.5*np.sum((y-target)**2)
 
     def cross_entropy(self, W, b, a_h, y):
         z = np.matmul(W, a_h) + b
