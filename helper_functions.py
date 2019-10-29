@@ -137,8 +137,6 @@ def matDesign (x , y, order, indVariables = 2):
 def downsampler(data,target):
     '''
     Downsamples the data and target
-    Note: I have written the code for downsampling target
-    Need to downsample data as well
     '''
     i_C1 = np.where(target > 0)[0]; i_C0 = np.where(target < 1)[0]
     n_C1 = len(i_C1)
