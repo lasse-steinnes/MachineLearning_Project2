@@ -144,10 +144,7 @@ def downsampler(data,target):
     # So for each in index in class 1 take random from class 0
     i_C0_dsample = np.random.choice(i_C0, size=n_C1, replace=False)
     # Join together with downsampled
-    targetT = target.T[0]
-    dtarget = np.hstack((targetT[i_C1], targetT[i_C0_dsample]))
-    # return the target in right dimensions
-    dtarget = dtarget.reshape(-1,1)
+    dtarget = np.vstack((targetT[i_C1], targetT[i_C0_dsample]))
 
     # Downsampling data
     ddata = np.vstack((data[i_C1],data[i_C0_dsample]))
