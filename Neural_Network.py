@@ -208,7 +208,6 @@ class Neural_Network:
         z = np.matmul(self.weights[self.layers -2], self.activations[self.layers -2 ]) + b
         a = self.functions[self.layers-2](self, z)
         ret = - np.sum(np.where(y==1, np.log(a), 0) )/y.shape[1]
-        
         if self.reg[0] == 'l1':
             ret -=  float(self.reg[1]) *np.sum(np.abs(b), axis =1).mean()
         if self.reg[0] == 'l2':
@@ -237,7 +236,7 @@ class Neural_Network:
         if self.log:
             temp = pd.DataFrame({"number of layers": self.layers, "nodes per layer": self.mapping, 
                                         "epoch":self.epoch, "batch size":self.gradient.mini_batch_size,
-                                        "learning rate": self.gradient.learning_rate,"momentum parameter":self.gradient.m0,
+                                        "learning rate": self.gradient.gamma,"momentum parameter":self.gradient.m0,
                                          "cost": cost, "accuracy":accuracy, "data set":name}, index=[self.call])
             self.toi = self.toi.append(temp)
             self.call += 1

@@ -44,9 +44,13 @@ class SGD:
             self.m0 = m0
 
         self.weights = None
-        
+
+        if adaptive_learning_rate =='cyclic':
+            self.maxm0= m0
+            self.maxgamma = learning_rate
+        self.curr_iter = 0
         try:
-            self.learning_rate_adaption = {'const': False, 'decay': SGD.__decay, 'momentum': SGD.__momentum}[adaptive_learning_rate]
+            self.learning_rate_adaption = {'const': False, 'decay': SGD.__decay, 'momentum': SGD.__momentum, 'cyclic':SGD.__cyclic}[adaptive_learning_rate]
         except:
             self.learning_rate_adaption = adaptive_learning_rate
         
@@ -64,10 +68,10 @@ class SGD:
         """
         runs a minibatch of from (X,t)
         """
-        try:
-            self.gamma = self.learning_rate_adaption(self, self.learning_rate, self.time)
-        except:
-            self.gamma = self.learning_rate
+        #try:
+        self.gamma = self.learning_rate_adaption(self, self.learning_rate, self.time)
+        #except:
+            #self.gamma = self.learning_rate
 
         if type(self.weights) == tuple:#when wheigths are set to be all inputs
             self.delta = self.deriv_cost_function( *self.weights)
@@ -78,7 +82,7 @@ class SGD:
             SGD.__momentum(self)
             self.delta = self.v
         self.delta *= self.gamma 
-
+        self.curr_iter += 1
         if update_weight:
             self.__old_weights = self.weights
             self.weights = self.__old_weights - self.delta
@@ -98,6 +102,7 @@ class SGD:
     def creat_mini_batch(self,X, t, num_mini_batches):
         X = np.copy(X)
         t = np.copy(t) 
+        self.iterations = self.epochs*num_mini_batches
         """
         returns array with [... (X_n, t_n) ...] for 0 < n < num_mini_batches
         """
@@ -121,11 +126,27 @@ class SGD:
         return True
 
     #functions for adaptive learning rate
+    def __cyclic(self, dummy1, dummy2):
+        x = self.curr_iter/self.iterations
+        change = 10 #==0.1
+        frac = 0.8
+        x0 = frac/2
+        if x < x0:
+            self.m0 = self.maxm0*(1 - x/(x0*change))
+            self.gamma = self.maxgamma*(0.9 + x/(x0*change))
+        elif (x > x0) and (x < frac):
+            self.m0 = self.maxm0*(0.9 + (x - x0)/(x0*change))
+            self.gamma = self.maxgamma*(1 - (x - x0)/(x0*change))
+        else:
+            self.m0 = self.maxm0
+            self.gamma = 0.9*self.maxgamma*(1 - 4*(x-frac))
+        return self.gamma
+
     def __decay(self, gamma0, t):
         return gamma0 / ( gamma0*t +1)
         
 
     def __momentum(self):
-        self.v = self.v * self.m0 + (1-self.m0)*self.delta
+        self.v = self.v * self.m0 + self.gamma*self.delta
 
 
