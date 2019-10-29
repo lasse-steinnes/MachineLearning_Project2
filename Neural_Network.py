@@ -27,7 +27,7 @@ class Neural_Network:
         #initalze biases shape (#nodes l, 1)
         self.biases = [np.random.randn(i, 1) for i in self.nodes[1:]]
         #initalize weights shape (#nodes l+1, #nodes l)
-        self.weights = [np.random.randn(i, j) for j, i in zip(self.nodes[:-1], self.nodes[1:])]
+        self.weights = [np.random.randn(i, j)/np.sqrt(j) for j, i in zip(self.nodes[:-1], self.nodes[1:])]
 
         # setup up a list of activation functions only one literal
         if active_fn == 'sigmoid':
@@ -154,7 +154,7 @@ class Neural_Network:
 
         samples = data.shape[0]
         num_mini_batches = samples // mini_batch_size
-
+        self.init_eta = eta
         self.tol_reached = False
         self.tolerance = tolerance
 
@@ -236,7 +236,8 @@ class Neural_Network:
         if self.log:
             temp = pd.DataFrame({"number of layers": self.layers, "nodes per layer": self.mapping, 
                                         "epoch":self.epoch, "batch size":self.gradient.mini_batch_size,
-                                        "learning rate": self.gradient.gamma,"momentum parameter":self.gradient.m0,
+                                        "learning rate": self.gradient.gamma, "initial learning rate": self.init_eta,
+                                            "momentum parameter":self.gradient.m0,
                                          "cost": cost, "accuracy":accuracy, "data set":name}, index=[self.call])
             self.toi = self.toi.append(temp)
             self.call += 1
