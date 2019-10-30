@@ -1,6 +1,6 @@
 from Neural_Network import Neural_Network
 from helper_functions import parse_data
-import pandas as pd 
+import pandas as pd
 from OneHot import OneHot
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
@@ -18,9 +18,9 @@ y_onehot = onehot.encoding(y)
 X_train, X_test, y_train, y_test = train_test_split(X, y_onehot, test_size =0.1)
 
 
-nn = Neural_Network([23,  40,       2],
+nn = Neural_Network([23,  40,       2], # For regression: [number of features, 1]
                          ['tanh',  'softmax'],
-                    'classification', regularization=('l2', 1e-2))
+                    'mse', regularization=('l2', 1e-2))
 
 nn.training(X_train, y_train,
             50, mini_batch_size=30,

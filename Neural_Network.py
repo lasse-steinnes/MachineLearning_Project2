@@ -31,20 +31,20 @@ class Neural_Network:
 
         # setup up a list of activation functions only one literal
         if active_fn == 'sigmoid':
-            self.functions = [Neural_Network.sigmoid_act for i in range(0, self.layers-1)]    
+            self.functions = [Neural_Network.sigmoid_act for i in range(0, self.layers-1)]
         elif active_fn == 'tanh':
-            self.functions = [Neural_Network.tanh_act for i in range(0, self.layers-1)]            
+            self.functions = [Neural_Network.tanh_act for i in range(0, self.layers-1)]
         else:
             d = {'sigmoid': Neural_Network.sigmoid_act, 'tanh': Neural_Network.tanh_act, 'softmax':Neural_Network.softmax_act, 'relu': Neural_Network.relu_act}
             self.functions = [d[name] for name in active_fn]
         #derivative of layer activation functions
         self.functions_prime = [autograd.elementwise_grad(l, 1) for l in self.functions]
-        
+
         self.reg = regularization
 
         # set up cost function
         if cost_function == 'classification':
-            self.cost_function = Neural_Network.cross_entropy 
+            self.cost_function = Neural_Network.cross_entropy
             self.functions[self.layers - 2] = Neural_Network.softmax_act
         if cost_function == 'mse':
             self.cost_function = Neural_Network.mse
@@ -57,12 +57,12 @@ class Neural_Network:
             self.mapping = str(self.nodes[0])
             for i in range(1, self.layers):
                 self.mapping += ' : ' + str(self.nodes[i])
-            
-            self.toi = pd.DataFrame(columns=["number of layers", "nodes per layer", 
+
+            self.toi = pd.DataFrame(columns=["number of layers", "nodes per layer",
                                         "epoch", "batch size",
                                         "learning rate","momentum parameter",
                                          "cost", "accuracy", "data set"])
-        
+
 
     def feedforward(self, data):
         '''
@@ -81,7 +81,7 @@ class Neural_Network:
             a = function(self, z)
             self.activations.append(a)
         return a
-    
+
 
     def __backpropagation(self, f_z, target):
         '''
@@ -115,7 +115,7 @@ class Neural_Network:
         current_biases = np.copy(self.biases)
 
         # looping through layers
-        for i in reversed(range(1, self.layers)): 
+        for i in reversed(range(1, self.layers)):
             self.activations[i-1] = np.mean(self.activations[i-1], axis = 1, keepdims = True)
             delta_W = np.matmul(delta, self.activations[i-1].T)
             if self.lmbd > 0.0:
@@ -146,16 +146,15 @@ class Neural_Network:
         """
         data = np.copy(data)
         target = np.copy(target)
-        self.gradient = SGD( self.cost_function, epochs = epochs, mini_batch_size = mini_batch_size, 
+        self.gradient = SGD( self.cost_function, epochs = epochs, mini_batch_size = mini_batch_size,
                 learning_rate = eta, adaptive_learning_rate = eta_schedule[0],
                 momentum = momentum, m0 = gamma)
-        
+
         self.lmbd = lmbd
 
         samples = data.shape[0]
         num_mini_batches = samples // mini_batch_size
 
-        self.tol_reached = False
         self.tolerance = tolerance
 
         for self.epoch in range(epochs):
@@ -164,13 +163,17 @@ class Neural_Network:
                 Neural_Network.feedforward(self, mini_batch_data.T)
                 #calls backpropagation to find the new gradient
                 Neural_Network.__backpropagation(self, mini_batch_data.T, mini_batch_target.T)
-            
+
             self.gradient.time += float(eta_schedule[1])* 1 #update time for decay
 
             # calculate the cost of the epoch
             Neural_Network.__epoch_output(self, data, target, name = 'train')
             if test_data != None:
                 Neural_Network.__epoch_output(self, *test_data, name = 'test')
+
+            # Checking if accuracy 
+            if accuracy_test(self) == True:
+                break
 
         if validation_data != None:
             Neural_Network.__epoch_output(self, *test_data, name = 'validation')
@@ -187,7 +190,7 @@ class Neural_Network:
 
     def tanh_act(self, z):
         return np.tanh(z)
-    
+
     def softmax_act(self, z):
         # z shape (#nodes, #samples)
         denom = np.sum(np.exp(z), axis = 0) #(#samples)
@@ -213,7 +216,7 @@ class Neural_Network:
         if self.reg[0] == 'l2':
             ret -=  float(self.reg[1]) * np.linalg.norm(b, axis =1).mean()
         return ret
-        
+
     def mse(self, b, W, a_h, y):
         z = np.matmul(W, a_h) + b
         a = self.functions[self.layers-2](self, z)
@@ -234,10 +237,22 @@ class Neural_Network:
         accuracy = Neural_Network.classification_accuracy(self, a, target)
         print('The %s accuracy is : %.4f' % (name, accuracy))
         if self.log:
-            temp = pd.DataFrame({"number of layers": self.layers, "nodes per layer": self.mapping, 
+            temp = pd.DataFrame({"number of layers": self.layers, "nodes per layer": self.mapping,
                                         "epoch":self.epoch, "batch size":self.gradient.mini_batch_size,
                                         "learning rate": self.gradient.gamma,"momentum parameter":self.gradient.m0,
                                          "cost": cost, "accuracy":accuracy, "data set":name}, index=[self.call])
             self.toi = self.toi.append(temp)
             self.call += 1
             del temp
+
+    # check if accuracy is constant
+    def accuracy_test(self):
+        if self.epoch > 5:
+            filter = toi['data set'] == 'test'
+            accuracy = toi[filter]['accuracy']
+            acc_array =  accuracy.to_numpy()
+            std_acc = np.std(acc_array[-5:])
+            if self.tolerance > std_acc:
+                return True
+        else:
+            return False
