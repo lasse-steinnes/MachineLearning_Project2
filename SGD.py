@@ -68,10 +68,10 @@ class SGD:
         """
         runs a minibatch of from (X,t)
         """
-        #try:
-        self.gamma = self.learning_rate_adaption(self, self.learning_rate, self.time)
-        #except:
-            #self.gamma = self.learning_rate
+        try:
+            self.gamma = self.learning_rate_adaption(self, self.learning_rate, self.time)
+        except:
+            self.gamma = self.learning_rate
 
         if type(self.weights) == tuple:#when wheigths are set to be all inputs
             self.delta = self.deriv_cost_function( *self.weights)
