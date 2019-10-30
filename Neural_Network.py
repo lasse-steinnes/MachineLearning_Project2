@@ -190,7 +190,7 @@ class Neural_Network:
     
     def softmax_act(self, z):
         # z shape (#nodes, #samples)
-        z -= np.max(z) 
+        #z -= np.max(z) 
         denom = np.sum(np.exp(z), axis = 0) #(#samples)
         denom = np.array([denom for i in range(z.shape[0])])
         return np.exp(z)/denom
