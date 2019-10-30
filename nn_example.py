@@ -28,18 +28,18 @@ X_train, X_test, y_train, y_test = train_test_split(X, y_onehot, test_size =0.1)
 
 
 nn = Neural_Network([23,  40,       2],
-                         ['tanh',  'softmax'],
+                         'tanh',
                     'classification', regularization=('l2', 1e-2))
 
 nn.training(X_train, y_train,
-            50, mini_batch_size=30,
+            10, mini_batch_size=30,
             eta =0.1, eta_schedule=('decay', 0.1),
             momentum=True, gamma = 0.3,
             lmbd=0.0, tolerance=10**-4,
             test_data=(X_test, y_test))
 
 plt.figure(figsize=(10,10))
-
+print(nn.toi)
 plt.subplot(121)
 sns.lineplot(x='epoch', y='cost', hue='data set', data = nn.toi)
 plt.xlabel("epochs", fontsize = 22)

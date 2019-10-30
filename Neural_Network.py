@@ -57,10 +57,14 @@ class Neural_Network:
             self.mapping = str(self.nodes[0])
             for i in range(1, self.layers):
                 self.mapping += ' : ' + str(self.nodes[i])
+                if type (active_fn) == list :
+                    self.mapping += '_' +active_fn[i-1]
+                else:
+                    self.mapping += '_' +active_fn
             
             self.toi = pd.DataFrame(columns=["number of layers", "nodes per layer", 
                                         "epoch", "batch size",
-                                        "learning rate","momentum parameter",
+                                        "learning rate","momentum parameter","lambda", "stopping tol",
                                          "cost", "accuracy", "data set"])
         
 
@@ -214,8 +218,8 @@ class Neural_Network:
             ret -=  float(self.reg[1]) * np.linalg.norm(b, axis =1).mean()
         return ret
         
-    def mse(self, b, W, a_h, y):
-        z = np.matmul(W, a_h) + b
+    def mse(self, b, y):
+        z = np.matmul(self.weights[self.layers -2], self.activations[self.layers -2 ]) + b
         a = self.functions[self.layers-2](self, z)
         ret = np.dot(a -y, a - y)/len(y)
         if self.reg[0] == 'l1':
@@ -237,6 +241,7 @@ class Neural_Network:
             temp = pd.DataFrame({"number of layers": self.layers, "nodes per layer": self.mapping, 
                                         "epoch":self.epoch, "batch size":self.gradient.mini_batch_size,
                                         "learning rate": self.gradient.gamma,"momentum parameter":self.gradient.m0,
+                                        "lambda": self.lmbd, "stopping tol": self.tolerance,
                                          "cost": cost, "accuracy":accuracy, "data set":name}, index=[self.call])
             self.toi = self.toi.append(temp)
             self.call += 1
