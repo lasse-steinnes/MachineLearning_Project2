@@ -1,6 +1,7 @@
 import pandas as pd 
 import seaborn as sns
 import matplotlib.pyplot as plt 
+import sys 
 #font size controles
 SMALL_SIZE = 12
 MEDIUM_SIZE = 16
@@ -21,7 +22,7 @@ def draw_heatmap(*args, **kwargs):
     f =sns.heatmap(d, annot = True,cbar = False, fmt ='.2f', annot_kws={'size':SMALL_SIZE}, **kwargs)
     return f
 
-df = pd.read_csv("nn_var_lamb.csv")
+df = pd.read_csv(sys.argv[1])
 df["activ. func."] = df["nodes per layer"].str[-1]
 df = df.rename(columns ={"nodes per layer":"topology", })
 df = df.replace({"activ. func.":{'d':'sigmoid', 'h':'tanh'}, 
