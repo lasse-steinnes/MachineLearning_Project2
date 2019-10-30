@@ -15,6 +15,7 @@ import numpy as np
 #eta 0.3     <-Lasse
 #batch size 50 -200     <- vary [50, 100, 150, 200]
 #topologies [23, 40, 2], [23, 40, 20, 2], [23, 40, 20, 10, 2], [23, 10, 20, 40, 2]
+#sigmoid/tanh all layers
 filename = "default of credit card clients.xls"
 df = pd.read_excel(filename, header=1)
 df = df.drop(columns=["ID"])
