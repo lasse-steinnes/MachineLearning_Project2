@@ -6,7 +6,15 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+##defalut values
 
+#down sampling 
+#momentum 0.9  <- James
+#lambda 1e-4   <- Lukas
+#epoch 100
+#eta 0.3     <-Lasse
+#batch size 50 -200     <- vary [50, 100, 150, 200]
+#topologies [23, 40, 2], [23, 40, 20, 2], [23, 40, 20, 10, 2], [23, 10, 20, 40, 2]
 filename = "default of credit card clients.xls"
 df = pd.read_excel(filename, header=1)
 df = df.drop(columns=["ID"])
