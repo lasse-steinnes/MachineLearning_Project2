@@ -79,8 +79,8 @@ class OneHot:
             input_df[:-1,-4 + i] = val
 
         confusion = pd.DataFrame(input_df,
-                                 columns = np.append([ str(self.one_hot_decoding_key[i]) for i in range(self.classes)], ["precision", "recall", "specificity", "accuracy"]),
-                                 index = np.append([self.one_hot_decoding_key[i] for i in range(self.classes)],'occurence'))
+                                 columns = np.append([ str(self.one_hot_decoding_key[i]) for i in range(classes)], ["precision", "recall", "specificity", "accuracy"]),
+                                 index = np.append([self.one_hot_decoding_key[i] for i in range(classes)],'occurence'))
         confusion.index.name = 'predicted class'
         confusion.columns.name = 'actual class'
         return confusion
