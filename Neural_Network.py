@@ -184,7 +184,7 @@ class Neural_Network:
                     break
 
         if validation_data != None:
-            Neural_Network.__epoch_output(self, *test_data, name = 'validation')
+            Neural_Network.__epoch_output(self, *validation_data, name = 'validation')
 
 
     def classification_accuracy(self, prediction, y):
