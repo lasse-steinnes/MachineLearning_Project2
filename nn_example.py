@@ -1,6 +1,6 @@
 from Neural_Network import Neural_Network
 from helper_functions import parse_data
-import pandas as pd 
+import pandas as pd
 from OneHot import OneHot
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
@@ -23,12 +23,15 @@ toi = pd.DataFrame(columns=["number of layers", "nodes per layer",
                                         "momentum parameter",
                                          "cost", "accuracy", "data set"])
 
+nn = Neural_Network([23,  40,       2], # For regression: [number of features, 1]
+                         ['tanh',  'softmax'],
+                    'mse', regularization=('l2', 1e-2))
+
 eta = np.array([0.25,0.3,0.35])
 mini_batch_size = np.array([40])
 epochs = np.array([30])
 lmbd = np.array([0.0])
 gamma = np.array([0.9])
-
 
 for n in gamma: 
     for m in lmbd:  
