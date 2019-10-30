@@ -46,8 +46,10 @@ class Neural_Network:
         if cost_function == 'classification':
             self.cost_function = Neural_Network.cross_entropy
             self.functions[self.layers - 2] = Neural_Network.softmax_act
+            self.has_acc = True
         if cost_function == 'mse':
             self.cost_function = Neural_Network.mse
+            self.has_acc = False
 
         self.log = False
         if log:
@@ -172,9 +174,10 @@ class Neural_Network:
             if test_data != None:
                 Neural_Network.__epoch_output(self, *test_data, name = 'test')
 
-            # Checking if accuracy 
-            if accuracy_test(self) == True:
-                break
+            # Checking if accuracy
+            if self.has_acc == True:
+                if accuracy_test(self) == True:
+                    break
 
         if validation_data != None:
             Neural_Network.__epoch_output(self, *test_data, name = 'validation')
@@ -219,10 +222,11 @@ class Neural_Network:
             ret -=  float(self.reg[1]) * np.linalg.norm(b, axis =1).mean()
         return ret
 
-    def mse(self, b, W, a_h, y):
-        z = np.matmul(W, a_h) + b
+    def mse(self, b, y):
+        z = np.matmul(self.weights[self.layers -2], self.activations[self.layers -2 ]) + b
         a = self.functions[self.layers-2](self, z)
-        ret = np.dot(a -y, a - y)/len(y)
+        res = a - y
+        ret = np.dot(res[0], res[0])/len(y)
         if self.reg[0] == 'l1':
             ret -=  float(self.reg[1]) * np.sum(np.abs(b), axis = 1).mean()
         if self.reg[0] == 'l2':
@@ -236,8 +240,11 @@ class Neural_Network:
         print('Current epoch: ', self.epoch)
         cost, a = Neural_Network.epoch_cost(self, data.T, target.T)
         print('The %s cost is: %.4f' % (name, cost))
-        accuracy = Neural_Network.classification_accuracy(self, a, target)
-        print('The %s accuracy is : %.4f' % (name, accuracy))
+        if self.has_acc == True:
+            accuracy = Neural_Network.classification_accuracy(self, a, target)
+            print('The %s accuracy is : %.4f' % (name, accuracy))
+        else:
+            accuracy = 'Nan'
         if self.log:
             temp = pd.DataFrame({"number of layers": self.layers, "nodes per layer": self.mapping,
                                         "epoch":self.epoch, "batch size":self.gradient.mini_batch_size,
