@@ -28,33 +28,36 @@ X_train, X_test, y_train, y_test = train_test_split(X, y_onehot, test_size =0.1)
 
 toi = pd.DataFrame(columns=["number of layers", "nodes per layer", 
                                         "epoch", "batch size",
-                                        "learning rate","initial learning rate", 
-                                        "momentum parameter",
+                                        "learning rate","initial learning rate","momentum parameter","lambda", "stopping tol",
                                          "cost", "accuracy", "data set"])
 
-nn = Neural_Network([23,  40,       2], # For regression: [number of features, 1]
-                         ['tanh',  'softmax'],
-                    'mse', regularization=('l2', 1e-2))
+#nn = Neural_Network([23,  40,       2], # For regression: [number of features, 1]
+#                         ['tanh',  'softmax'],
+#                    'mse', regularization=('l2', 1e-2))
 
-eta = np.array([0.25,0.3,0.35])
-mini_batch_size = np.array([40])
-epochs = np.array([30])
+eta = np.array([0.3])
+mini_batch_size = np.array([50,100,150,200])
+epochs = np.array([100])
 lmbd = np.array([0.0])
 gamma = np.array([0.9])
+layers = np.array([[23,40,2],
+                  [23,40,20,2],
+                  [23,40,20,10,2],
+                  [23,10,20,40,2]])
 
 for n in gamma: 
     for m in lmbd:  
         for k in epochs:
             for j in eta:
                 for i in mini_batch_size:              
-                        
-                        nn = Neural_Network([23,  40,       2],
+                    for h in layers:
+                        nn = Neural_Network(h,
                                          ['tanh',  'softmax'],
                                     'classification', regularization=('l2', 1e-2))
                     
                         nn.training(X_train, y_train,
                             k, mini_batch_size=i,
-                            eta = j, eta_schedule=('decay', 0.000001),
+                            eta = j, eta_schedule=('decay', 0.01),
                             momentum=True, gamma = gamma,
                             lmbd=m, tolerance=10**-4,
                             test_data=(X_test, y_test))

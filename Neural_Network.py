@@ -66,7 +66,7 @@ class Neural_Network:
             
             self.toi = pd.DataFrame(columns=["number of layers", "nodes per layer", 
                                         "epoch", "batch size",
-                                        "learning rate","momentum parameter","lambda", "stopping tol",
+                                        "learning rate","initial learning rate","momentum parameter","lambda", "stopping tol",
                                          "cost", "accuracy", "data set"])
 
 
@@ -253,7 +253,8 @@ class Neural_Network:
         if self.log:
             temp = pd.DataFrame({"number of layers": self.layers, "nodes per layer": self.mapping,
                                         "epoch":self.epoch, "batch size":self.gradient.mini_batch_size,
-                                        "learning rate": self.gradient.gamma,"momentum parameter":self.gradient.m0,
+                                        "learning rate": self.gradient.gamma, "initial learning rate": self.init_eta,
+                                        "momentum parameter":self.gradient.m0,
                                         "lambda": self.lmbd, "stopping tol": self.tolerance,
                                          "cost": cost, "accuracy":accuracy, "data set":name}, index=[self.call])
             self.toi = self.toi.append(temp)
