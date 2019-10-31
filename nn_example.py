@@ -24,6 +24,12 @@ X = X[: ,1:]#drop cont column  from model
 onehot = OneHot()
 y_onehot = onehot.encoding(y)
 
+curr_seed=0
+np.random.seed(curr_seed)
+np.random.shuffle(X)
+np.random.seed(curr_seed)
+np.random.shuffle(y_onehot)
+
 X_train, X_test, y_train, y_test = train_test_split(X, y_onehot, test_size =0.1)
 
 toi = pd.DataFrame(columns=["number of layers", "nodes per layer", 
@@ -38,12 +44,13 @@ toi = pd.DataFrame(columns=["number of layers", "nodes per layer",
 eta = np.array([0.3])
 mini_batch_size = np.array([50,100,150,200])
 epochs = np.array([100])
-lmbd = np.array([0.0])
+lmbd = np.array([1e-4])
 gamma = np.array([0.9])
 layers = np.array([[23,40,2],
                   [23,40,20,2],
                   [23,40,20,10,2],
                   [23,10,20,40,2]])
+functions = np.array(['tanh', 'sigmoid'])
 
 for n in gamma: 
     for m in lmbd:  
@@ -51,18 +58,18 @@ for n in gamma:
             for j in eta:
                 for i in mini_batch_size:              
                     for h in layers:
-                        nn = Neural_Network(h,
-                                         ['tanh',  'softmax'],
-                                    'classification', regularization=('l2', 1e-2))
-                    
-                        nn.training(X_train, y_train,
-                            k, mini_batch_size=i,
-                            eta = j, eta_schedule=('decay', 0.01),
-                            momentum=True, gamma = gamma,
-                            lmbd=m, tolerance=10**-4,
-                            test_data=(X_test, y_test))
+                        for g in functions:
+                            nn = Neural_Network(h, g,
+                                        'classification', regularization=('l2', 1e-2))
                         
-                        toi = toi.append(nn.toi)
+                            nn.training(X_train, y_train,
+                                k, mini_batch_size=i,
+                                eta = j, eta_schedule=('decay', 0.01),
+                                momentum=True, gamma = gamma,
+                                lmbd=m, tolerance=10**-4,
+                                test_data=(X_test, y_test))
+                            
+                            toi = toi.append(nn.toi)
 
 toi.to_csv('./Results/NeuralNetwork/nn.csv') 
 
