@@ -1,3 +1,7 @@
+"""
+script to viwsulaize the toi for a nn with variation in hyperparameter
+usage: python vis_nn.py filename str(parameter to vary)
+"""
 import pandas as pd 
 import seaborn as sns
 import matplotlib.pyplot as plt 
