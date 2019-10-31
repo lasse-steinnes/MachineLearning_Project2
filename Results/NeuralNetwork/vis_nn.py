@@ -37,3 +37,10 @@ g = sns.FacetGrid(df[ df["data set"] == 'test'], col="topology", row ='activ. fu
 g.map_dataframe(draw_heatmap, 'batch size','lambda', 'cost', vmin = df["cost"].min(), vmax = df["cost"].max(), aggregate='min')
 plt.show()
 
+try:
+    #accuracy plot
+    g = sns.FacetGrid(df[ df["data set"] == 'validation'], col="topology", row ='activ. func.', margin_titles=True)
+    g.map_dataframe(draw_heatmap, 'batch size','lambda', 'accuracy', vmin = df["accuracy"].min(), vmax = df["accuracy"].max(), aggregate = 'max')
+    plt.show()
+except:
+    pass
