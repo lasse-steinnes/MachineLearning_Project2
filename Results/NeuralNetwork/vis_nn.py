@@ -2,6 +2,7 @@
 script to viwsulaize the toi for a nn with variation in hyperparameter
 usage: python vis_nn.py filename str(parameter to vary)
 """
+
 import pandas as pd 
 import seaborn as sns
 import matplotlib.pyplot as plt 
@@ -11,7 +12,9 @@ SMALL_SIZE = 12
 MEDIUM_SIZE = 16
 BIGGER_SIZE = 20
 sns.set_context("paper", rc={"font.size":MEDIUM_SIZE,"axes.titlesize":MEDIUM_SIZE,"axes.labelsize":MEDIUM_SIZE, 'legend':MEDIUM_SIZE})
+
 Y = sys.argv[2]
+
 def draw_heatmap(*args, **kwargs):
     """
     heatmap function for FacetGrid
@@ -48,3 +51,4 @@ try:
     plt.show()
 except:
     pass
+
