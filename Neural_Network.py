@@ -5,7 +5,7 @@ from SGD import SGD
 import pandas as pd
 class Neural_Network:
 
-    def __init__(self, number_of_nodes, active_fn, cost_function,regularization =('none', 1e-15), log = True):
+    def __init__(self, number_of_nodes, active_fn, cost_function, pol_order = None, regularization =('none', 1e-15), log = True):
         """
         Initialize a NN
         number of nodes: -list of number of nodes including input and output layer
@@ -20,6 +20,8 @@ class Neural_Network:
         -feedforward:   claculate output of NN based on data shape (#features, #samples)
         -training:      trains the NN, usage of SGD class and backpropagation
         """
+
+        self.pol_order = pol_order
 
         self.nodes = number_of_nodes
         self.layers = len(number_of_nodes)
@@ -51,6 +53,8 @@ class Neural_Network:
             self.cost_function = Neural_Network.mse
             self.has_acc = False
 
+
+
         self.log = False
         if log:
             self.log = True
@@ -63,11 +67,16 @@ class Neural_Network:
                     self.mapping += '_' + active_fn[i-1]
                 else:
                     self.mapping += '_' + active_fn
-            
-            self.toi = pd.DataFrame(columns=["number of layers", "nodes per layer", 
+            if pol_order:
+                self.toi = pd.DataFrame(columns=["number of layers", "nodes per layer",
                                         "epoch", "batch size",
                                         "learning rate","initial learning rate","momentum parameter","lambda", "stopping tol",
-                                         "cost", "accuracy", "data set"])
+                                         "cost", "accuracy", "data set"," pol order"])
+            else:
+                self.toi = pd.DataFrame(columns=["number of layers", "nodes per layer",
+                                            "epoch", "batch size",
+                                            "learning rate","initial learning rate","momentum parameter","lambda", "stopping tol",
+                                             "cost", "accuracy", "data set"])
 
 
     def feedforward(self, data):
@@ -201,7 +210,7 @@ class Neural_Network:
 
     def softmax_act(self, z):
         # z shape (#nodes, #samples)
-        #z -= np.max(z) 
+        #z -= np.max(z)
         denom = np.sum(np.exp(z), axis = 0) #(#samples)
         denom = np.array([denom for i in range(z.shape[0])])
         return np.exp(z)/denom
@@ -226,7 +235,7 @@ class Neural_Network:
             ret -=  float(self.reg[1]) * np.linalg.norm(b, axis =1).mean()
         return ret
 
-        
+
     def mse(self, b, y):
         z = np.matmul(self.weights[self.layers -2], self.activations[self.layers -2 ]) + b
         a = self.functions[self.layers-2](self, z)
@@ -251,15 +260,27 @@ class Neural_Network:
         else:
             accuracy = 'Nan'
         if self.log:
-            temp = pd.DataFrame({"number of layers": self.layers, "nodes per layer": self.mapping,
-                                        "epoch":self.epoch, "batch size":self.gradient.mini_batch_size,
-                                        "learning rate": self.gradient.gamma, "initial learning rate": self.init_eta,
-                                        "momentum parameter":self.gradient.m0,
-                                        "lambda": self.lmbd, "stopping tol": self.tolerance,
-                                         "cost": cost, "accuracy":accuracy, "data set":name}, index=[self.call])
-            self.toi = self.toi.append(temp)
-            self.call += 1
-            del temp
+            if self.pol_order:
+                temp = pd.DataFrame({"number of layers": self.layers, "nodes per layer": self.mapping,
+                                            "epoch":self.epoch, "batch size":self.gradient.mini_batch_size,
+                                            "learning rate": self.gradient.gamma, "initial learning rate": self.init_eta,
+                                            "momentum parameter":self.gradient.m0,
+                                            "lambda": self.lmbd, "stopping tol": self.tolerance,
+                                            "cost": cost, "accuracy":accuracy, "data set":name,"pol order":self.pol_order}, index=[self.call])
+                self.toi = self.toi.append(temp)
+                self.call += 1
+                del temp
+
+            else:
+                temp = pd.DataFrame({"number of layers": self.layers, "nodes per layer": self.mapping,
+                                            "epoch":self.epoch, "batch size":self.gradient.mini_batch_size,
+                                            "learning rate": self.gradient.gamma, "initial learning rate": self.init_eta,
+                                            "momentum parameter":self.gradient.m0,
+                                            "lambda": self.lmbd, "stopping tol": self.tolerance,
+                                             "cost": cost, "accuracy":accuracy, "data set":name}, index=[self.call])
+                self.toi = self.toi.append(temp)
+                self.call += 1
+                del temp
 
     # check if accuracy is constant
     def accuracy_test(self):
