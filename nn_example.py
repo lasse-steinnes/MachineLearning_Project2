@@ -44,14 +44,14 @@ toi = pd.DataFrame(columns=["number of layers", "nodes per layer",
 eta = np.array([0.1,0.25,0.3,0.4])
 mini_batch_size = np.array([50,100,150,200])
 epochs = np.array([100])
-lmbd = np.array([1e-4])
+lmbd = np.array([1e-8])
 gamma = np.array([0.9])
-layers = np.array([[23,40,2],
-                  [23,40,20,2],
-                  [23,40,20,10,2],
-                  [23,10,20,40,2]])
 
-functions = np.array(['tanh', 'sigmoid'])
+layers = np.array([[23, 40, 2], 
+                   [23, 40, 20, 2], 
+                   [23, 40, 20, 10, 2], 
+                   [23, 10, 20, 40, 2]])                 
+functions = np.array(['tanh','sigmoid'])
 
 for n in gamma:
     for m in lmbd:
@@ -66,7 +66,7 @@ for n in gamma:
                             nn.training(X_train, y_train,
                                 k, mini_batch_size=i,
                                 eta = j, eta_schedule=('decay', 0.01),
-                                momentum=True, gamma = gamma,
+                                momentum=True, gamma = n,
                                 lmbd=m, tolerance=10**-4,
                                 test_data=(X_test, y_test))
 
@@ -75,7 +75,7 @@ for n in gamma:
 toi.to_csv('./Results/NeuralNetwork/nn.csv')
 
 plt.figure(figsize=(10,10))
-print(nn.toi)
+
 plt.subplot(121)
 sns.lineplot(x='epoch', y='cost', hue='data set', data = nn.toi)
 plt.xlabel("epochs", fontsize = 22)
