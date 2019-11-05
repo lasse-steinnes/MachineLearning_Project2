@@ -166,7 +166,7 @@ class Neural_Network:
                 momentum = momentum, m0 = gamma)
 
         self.lmbd = lmbd
-
+        best_accuracy = 0.0
         samples = data.shape[0]
         num_mini_batches = samples // mini_batch_size
 
@@ -189,9 +189,16 @@ class Neural_Network:
 
             # Checking if accuracy
             if self.has_acc == True:
+                if self.accuracy > best_accuracy:
+                    best_accuracy = self.accuracy
+                    best_weights = np.copy(self.weights)
                 if Neural_Network.accuracy_test(self) == True:
                     break
-
+                
+        #after training set the weights to the best weights        
+        if self.has_acc:
+            self.weights = best_weights
+            
         if validation_data != None:
             Neural_Network.__epoch_output(self, *validation_data, name = 'validation')
 
@@ -257,6 +264,9 @@ class Neural_Network:
         if self.has_acc == True:
             accuracy = Neural_Network.classification_accuracy(self, a, target)
             print('The %s accuracy is : %.4f' % (name, accuracy))
+            #store the current test accuracy
+            if name == 'test':
+                self.accuracy = accuracy
         else:
             accuracy = 'Nan'
         if self.log:

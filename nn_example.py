@@ -24,13 +24,19 @@ X = X[: ,1:]#drop cont column  from model
 onehot = OneHot()
 y_onehot = onehot.encoding(y)
 
-curr_seed=0
+curr_seed= 0
 np.random.seed(curr_seed)
 np.random.shuffle(X)
 np.random.seed(curr_seed)
 np.random.shuffle(y_onehot)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y_onehot, test_size =0.1)
+kfold = 0
+
+if kfold != 0:
+    X_folds = np.array(np.array_split(X, kfold))
+    y_folds = np.array(np.array_split(y_onehot, kfold))
+else:
+    X_train, X_test, y_train, y_test = train_test_split(X, y_onehot, test_size =0.1)
 
 toi = pd.DataFrame(columns=["number of layers", "nodes per layer",
                                         "epoch", "batch size",
@@ -41,17 +47,13 @@ toi = pd.DataFrame(columns=["number of layers", "nodes per layer",
 #                         ['tanh',  'softmax'],
 #                    'mse', regularization=('l2', 1e-2))
 
-eta = np.array([0.1,0.25,0.3,0.4])
-mini_batch_size = np.array([50,100,150,200])
+eta = np.array([0.3])
+mini_batch_size = np.array([50])
 epochs = np.array([100])
 lmbd = np.array([1e-8])
 gamma = np.array([0.9])
-
-layers = np.array([[23, 40, 2], 
-                   [23, 40, 20, 2], 
-                   [23, 40, 20, 10, 2], 
-                   [23, 10, 20, 40, 2]])                 
-functions = np.array(['tanh','sigmoid'])
+layers = np.array([[23, 40, 2]])
+functions = np.array(['tanh'])
 
 for n in gamma:
     for m in lmbd:
@@ -60,39 +62,79 @@ for n in gamma:
                 for i in mini_batch_size:
                     for h in layers:
                         for g in functions:
-                            nn = Neural_Network(h, g,
-                                        'classification', regularization=('l1', 1e-2))
+                            if kfold != 0:                                
+                                temp = pd.DataFrame(columns=["number of layers", "nodes per layer",
+                                        "epoch", "batch size",
+                                        "learning rate","initial learning rate","momentum parameter","lambda", "stopping tol",
+                                         "cost", "accuracy", "data set"])
+                                for s in range(0, kfold):
+                                    t = s + 1
+                                    if s == k:
+                                        t = 1
+                                    X_train = np.concatenate(np.delete(X_folds, s , 0))                                    
+                                    X_test  = X_folds[s]    
+                                    y_train = np.concatenate(np.delete(y_folds, s , 0))
+                                    y_test  = y_folds[s]    
+                                    
+                                    nn = Neural_Network(h, g,
+                                                'classification', regularization=('l2', 1e-2))
+                                    
+                                    nn.training(X_train, y_train,
+                                        k, mini_batch_size=i,
+                                        eta = j, eta_schedule=('decay', 0.01),
+                                        momentum=True, gamma = n,
+                                        lmbd=m, tolerance=10**-4,
+                                        test_data=(X_test, y_test))
+        
+                                    temp = temp.append(nn.toi)
+                                    #print(temp)
+                                # find the mean value of the cost and accuracy                                
+                                mean_temp = temp.groupby(["number of layers", "nodes per layer",
+                                        "epoch", "batch size", "learning rate","initial learning rate",
+                                        "momentum parameter","lambda", "stopping tol",
+                                        "data set"], as_index = False).mean()
+                                print (mean_temp)
+                                toi = toi.append(mean_temp)
+                                del temp
+                            else:
+                                
+                                nn = Neural_Network(h, g,
+                                    'classification', regularization=('l2', 1e-2))
 
-                            nn.training(X_train, y_train,
-                                k, mini_batch_size=i,
-                                eta = j, eta_schedule=('decay', 0.01),
-                                momentum=True, gamma = n,
-                                lmbd=m, tolerance=10**-4,
-                                test_data=(X_test, y_test))
-
-                            toi = toi.append(nn.toi)
+                                nn.training(X_train, y_train,
+                                    k, mini_batch_size=i,
+                                    eta = j, eta_schedule=('decay', 0.01),
+                                    momentum=True, gamma = n,
+                                    lmbd=m, tolerance=10**-4,
+                                    test_data=(X_test, y_test))
+    
+                                toi = toi.append(nn.toi)
 
 toi.to_csv('./Results/NeuralNetwork/nn.csv')
 
 plt.figure(figsize=(10,10))
 
 plt.subplot(121)
-sns.lineplot(x='epoch', y='cost', hue='data set', data = nn.toi)
+sns.lineplot(x='epoch', y='cost', hue='data set', data = toi)
 plt.xlabel("epochs", fontsize = 22)
 plt.ylabel('cost', fontsize = 22)
 plt.xticks(fontsize =20)
 plt.yticks(fontsize =20)
+plt.savefig(fname ='./Results/NeuralNetwork/epoch_cost.pdf', dpi='figure', format = 'pdf')
 
 plt.subplot(122)
-sns.lineplot(x='epoch', y='accuracy', hue='data set', data = nn.toi)
+sns.lineplot(x='epoch', y='accuracy', hue='data set', data = toi)
 plt.xlabel("epochs", fontsize = 22)
 plt.ylabel('accuracy', fontsize = 22)
 plt.xticks(fontsize =20)
 plt.yticks(fontsize =20)
 plt.tight_layout()
+plt.savefig(fname ='./Results/NeuralNetwork/epoch_acc.pdf', dpi='figure', format = 'pdf')
 plt.show()
 
 X_eval, y_eval = parse_data(df, "default payment next month", unbalanced= False)
 y_eval = onehot.encoding(y_eval)
 p = nn.feedforward(X_eval[:,1:].T)
-print(onehot.confusion(p.T, np.argmax(y_eval, axis =1)))
+confusion = onehot.confusion(p.T, np.argmax(y_eval, axis =1))
+print(confusion.to_latex())
+confusion.to_csv('./Results/NeuralNetwork/confusion.csv')
