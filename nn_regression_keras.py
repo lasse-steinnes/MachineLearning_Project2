@@ -28,6 +28,7 @@ for order in p_order:
     model.compile(optimizer='adam',
               loss='mse')
 
+### accuracy not important
     av_acc = 0
     for i in range(10):
         X_train, X_test, y_train, y_test = train_test_split(X[:,1:], z, test_size =0.1)
