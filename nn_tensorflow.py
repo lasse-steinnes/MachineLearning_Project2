@@ -1,3 +1,6 @@
+"""
+compare NN for classification with tensorflow 
+"""
 import tensorflow as tf 
 import pandas as pd 
 from helper_functions import parse_data 
@@ -9,7 +12,7 @@ import numpy as np
 filename = "default of credit card clients.xls"
 df = pd.read_excel(filename, header=1)
 df = df.drop(columns=["ID"])
-X_b, y_b = parse_data(df, "default payment next month", unbalanced= True )
+X_b, y_b = parse_data(df, "default payment next month", unbalanced= False )
 X_b = X_b[: ,1:]
 X, y = parse_data(df, "default payment next month", unbalanced= False )
 X = X[: ,1:]#drop cont column  from model
@@ -32,7 +35,7 @@ model.compile(optimizer='adam',
 av_acc = 0
 for i in range(10):
     X_train, X_test, y_train, y_test = train_test_split(X_b, y_onehot, test_size =0.2)
-    model.fit(X_train, y_train, epochs=5)
+    model.fit(X_train, y_train, epochs=20)
     _, acc =model.evaluate(X, y)
     av_acc += acc
 print(av_acc/10)
