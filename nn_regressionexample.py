@@ -58,10 +58,10 @@ for order in p_order:
                                 nn.training(X_train, y_train,
                                         k, mini_batch_size=i,
                                         eta = j, eta_schedule=('decay', 0.01),
-                                        momentum=True, gamma = gamma,
+                                        momentum=True, gamma = n,
                                         lmbd=m, tolerance=10**-4,
                                         test_data=(X_test, y_test))
 
                                 toi = toi.append(nn.toi)
 
-toi.to_csv('./Results/NeuralNetwork/nn.csv')
+toi.to_csv('./Results/NeuralNetworkReg/nn.csv')
