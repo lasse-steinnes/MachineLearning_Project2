@@ -158,11 +158,7 @@ class LogisticRegression (SGD, OneHot):
         L0 = np.sum(np.log(pred))
         LB = np.sum(np.log(LogisticRegression.predict(self, X)))
         return (L0-LB)/L0
-        """
-        res_den = prediction -y
-        res_nom = y - np.mean(y)
-        return 1 - np.dot(res_den,res_den) / np.dot(res_nom, res_nom)
-        """
+
 
     def __accuracy(self, prediction, y):
         mask = prediction == y
