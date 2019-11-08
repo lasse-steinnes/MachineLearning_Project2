@@ -89,7 +89,7 @@ for order in p_order:
                                     mean_temp = temp.groupby(["number of layers", "nodes per layer",
                                         "epoch", "batch size", "learning rate","initial learning rate",
                                         "momentum parameter","lambda", "stopping tol",
-                                        "data set","accuracy"], as_index = False).mean()
+                                        "data set","accuracy","pol order"], as_index = False).mean()
 
                                     toi = toi.append(mean_temp)
                                     del temp
