@@ -69,12 +69,14 @@ for n in gamma:
                                          "cost", "accuracy", "data set"])
                                 for s in range(0, kfold):
                                     t = s + 1
-                                    if s == k:
+                                    if s == kfold-1:
                                         t = 1
-                                    X_train = np.concatenate(np.delete(X_folds, s , 0))                                    
-                                    X_test  = X_folds[s]    
-                                    y_train = np.concatenate(np.delete(y_folds, s , 0))
-                                    y_test  = y_folds[s]    
+                                    X_train = np.concatenate(np.delete(X_folds, s and t , 0))                                    
+                                    X_test  = X_folds[s]   
+                                    X_validation = X_folds[t]
+                                    y_train = np.concatenate(np.delete(y_folds, s and t, 0))
+                                    y_test  = y_folds[s] 
+                                    y_validation = y_folds[t]
                                     
                                     nn = Neural_Network(h, g,
                                                 'classification', regularization=('l2', 1e-2))
@@ -84,7 +86,8 @@ for n in gamma:
                                         eta = j, eta_schedule=('decay', 0.01),
                                         momentum=True, gamma = n,
                                         lmbd=m, tolerance=10**-4,
-                                        test_data=(X_test, y_test))
+                                        test_data=(X_test, y_test),
+                                        validation_data=(X_validation,y_validation))
         
                                     temp = temp.append(nn.toi)
                                     #print(temp)
@@ -136,5 +139,5 @@ X_eval, y_eval = parse_data(df, "default payment next month", unbalanced= False)
 y_eval = onehot.encoding(y_eval)
 p = nn.feedforward(X_eval[:,1:].T)
 confusion = onehot.confusion(p.T, np.argmax(y_eval, axis =1))
-print(confusion.to_latex())
-confusion.to_csv('./Results/NeuralNetwork/confusion.csv')
+confusion.to_latex('./Results/NeuralNetwork/confusion.tex')
+#confusion.to_csv('./Results/NeuralNetwork/confusion.csv')
