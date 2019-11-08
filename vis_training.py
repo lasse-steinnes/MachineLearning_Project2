@@ -1,6 +1,7 @@
 
 """
-little script to visualize training beahavior
+little script to visualize training beahavior of Logistic Regression
+optional settings: type setting name and value
 """
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -28,7 +29,6 @@ while i < len(sys.argv):
 
 
 df = pd.read_excel("/home/lukas/Documents/MachineLearning_Project2/default of credit card clients.xls", header = 1)
-df = df.drop(columns =["ID", "SEX",	"EDUCATION", "MARRIAGE",	"AGE", "BILL_AMT1",	"BILL_AMT2",	"BILL_AMT3",	"BILL_AMT4",	"BILL_AMT5",	"BILL_AMT6"])
 
 X,y = parse_data(df, "default payment next month", unbalanced=False) 
 X_t, x_t, Y_t, y_t = train_test_split(X, y, test_size = 0.2)

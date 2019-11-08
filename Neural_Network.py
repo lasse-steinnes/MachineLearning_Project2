@@ -43,16 +43,17 @@ class Neural_Network:
         self.functions_prime = [autograd.elementwise_grad(l, 1) for l in self.functions]
 
         self.reg = regularization
-
+        self.cost_mse = False
         # set up cost function
         if cost_function == 'classification':
             self.cost_function = Neural_Network.cross_entropy
             self.functions[self.layers - 2] = Neural_Network.softmax_act
             self.has_acc = True
         if cost_function == 'mse':
+            self.cost_mse = True
             self.cost_function = Neural_Network.mse
             self.has_acc = False
-
+        
 
 
         self.log = False
@@ -194,7 +195,10 @@ class Neural_Network:
                     best_weights = np.copy(self.weights)
                 if Neural_Network.accuracy_test(self) == True:
                     break
-                
+            # check cost if mse
+            if self.cost_mse == True:
+                if Neural_Network.cost_test(self) == True:
+                    break
         #after training set the weights to the best weights        
         if self.has_acc:
             self.weights = best_weights
@@ -303,3 +307,14 @@ class Neural_Network:
                 return True
         else:
             return False
+
+    def cost_test(self):
+            if self.epoch > 5:
+                filter = self.toi['data set'] == 'test'
+                cost = self.toi[filter]['cost']
+                cost_array =  cost.to_numpy()
+                std_cost = np.std(cost_array[-5:])
+                if self.tolerance > std_cost:
+                    return True
+            else:
+                return False

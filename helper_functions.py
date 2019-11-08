@@ -1,5 +1,5 @@
 """
-functions for parsing data frame from credit card data
+functions for parsing data frame from credit card data and terain data
 """
 import numpy as np
 import pandas as pd

@@ -99,5 +99,4 @@ for order in p_order:
 
                                     toi = toi.append(nn.toi)
 
-
-toi.to_csv('./Results/NeuralNetwork/nn.csv')
+toi.to_csv('./Results/NeuralNetworkReg/nn.csv')
