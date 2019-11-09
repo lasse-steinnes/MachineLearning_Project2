@@ -22,7 +22,6 @@ class Neural_Network:
         """
 
         self.pol_order = pol_order
-
         self.nodes = number_of_nodes
         self.layers = len(number_of_nodes)
 
@@ -41,9 +40,9 @@ class Neural_Network:
             self.functions = [d[name] for name in active_fn]
         #derivative of layer activation functions
         self.functions_prime = [autograd.elementwise_grad(l, 1) for l in self.functions]
-
         self.reg = regularization
         self.cost_mse = False
+        
         # set up cost function
         if cost_function == 'classification':
             self.cost_function = Neural_Network.cross_entropy
@@ -170,7 +169,6 @@ class Neural_Network:
         best_accuracy = 0.0
         samples = data.shape[0]
         num_mini_batches = samples // mini_batch_size
-
         self.init_eta = eta
         self.tolerance = tolerance
 
@@ -195,7 +193,8 @@ class Neural_Network:
                     best_weights = np.copy(self.weights)
                 if Neural_Network.accuracy_test(self) == True:
                     break
-            # check cost if mse
+                
+            # Checking if MSE
             if self.cost_mse == True:
                 if Neural_Network.cost_test(self) == True:
                     break
@@ -220,8 +219,6 @@ class Neural_Network:
         return np.tanh(z)
 
     def softmax_act(self, z):
-        # z shape (#nodes, #samples)
-        #z -= np.max(z)
         denom = np.sum(np.exp(z), axis = 0) #(#samples)
         denom = np.array([denom for i in range(z.shape[0])])
         return np.exp(z)/denom
@@ -298,6 +295,13 @@ class Neural_Network:
 
     # check if accuracy is constant
     def accuracy_test(self):
+        '''
+        function for keeping track of the accuracy of the past five epochs. 
+        If the standard deviation of the past five is less than the tolerance
+        then the epoch loop is broken and the learning stops. 
+        
+        returns: True or False
+        '''
         if self.epoch > 5:
             filter = self.toi['data set'] == 'test'
             accuracy = self.toi[filter]['accuracy']
@@ -309,6 +313,13 @@ class Neural_Network:
             return False
 
     def cost_test(self):
+        '''
+        function for keeping track of the cost of the past five epochs. 
+        If the standard deviation of the past five is less than the tolerance
+        then the epoch loop is broken and the learning stops. 
+        
+        returns: True or False
+        '''
             if self.epoch > 5:
                 filter = self.toi['data set'] == 'test'
                 cost = self.toi[filter]['cost']
