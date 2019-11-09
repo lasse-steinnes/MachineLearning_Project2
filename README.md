@@ -14,7 +14,7 @@ The folder Results contains the .csv files and figures produced for the report.
                                        
 The folder Terraindata contains the .tif files for the regression problem.
 
-The folder Reports contains the written report explaining the methods and results of the Logistic and Neural Network.
+The folder Report contains the written report explaining the methods and results of the Logistic and Neural Network.
 
 The remaining files in the repository are the codes created for the Logistic Regression and Neural Network and visualisation.
     
