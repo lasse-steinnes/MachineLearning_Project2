@@ -7,27 +7,36 @@ class SGD:
     '''
     class which performs Stocastic Gradient Descent for a Neural Network
     and for Logistic regression. 
+    class variables:
+        deriv_cost_function     stores derivative of cost function using autograd w.r.t second argument, function
+        epochs                  maximal #epochs, int
+        tolerance               stopping tolerance for early stopping, float
+
+        mini_batch_size         size of minibatch, int
+        learning_rate           stores the starting learning rate, float
+        gamma                   stores the current learning rate according to update scheme, float
+        learning_rate_adaption  function to update learning rate, string 'const','decay', 'cyclic' or function
+        time                    used for decaying learning rate, float
+        momentum                indicates that momentum is used, bool
+        m0                      momentum strength, float
+
+        weights                 either an array in which weights are directly updated or list of arguments to cost function
+
+    methods:
+        __init__                initialize class variables
+        run_SGD(X,t)            runs whole SGD on given data X (samples,features) and target t (samples,)
+        run_minibatch(batch, update_weights)    runs minibatch with batch (mini_batch_size, features) and updates weights if True
+        run_epoch(X,t, num_minibatches) runs a whole training epoch with #num_minibatches on X, t
+        create_mini_batch(X,t, num_minibatches) shuffles data, split it inot #num_minibatches and returns an iterable object of batched inputs and targets
+
+
+
     '''
     
     def __init__(self, cost_function, epochs =10, mini_batch_size = 10, 
                 learning_rate = 0.5, adaptive_learning_rate = 'const',
                 momentum = True, m0 = 1e-2,
                 tolerance = 1):
-        """
-        Stocastic gradient descent (SGD) should be run
-        in each batch. It should be used by picking a few points
-        at random and sending them through the network. At 
-        which point in the last layer the gradients are found 
-        of these points and a new parameter (weight and bias)
-        is found to minimise the cost function.
-        
-        This function takes the cost function, learning rate and 
-        the parameter.
-        This function outputs the new updated parameter and a 
-        boolean refering to if the tolerance has been reached.
-        'True' we are within the tolerance, 'False' we have not 
-        reached the max tolerance.
-        """
         #cost_function(self, Weights, data, target) 
         self.deriv_cost_function = grad(cost_function, 1)
 
@@ -36,6 +45,7 @@ class SGD:
         self.learning_rate = learning_rate
 
         self.tolerance = tolerance
+
         #tracks number of epochs
         self. time = 0
         self.momentum = momentum
@@ -83,6 +93,7 @@ class SGD:
             self.delta = self.v
         self.delta *= self.gamma 
         self.curr_iter += 1
+        
         if update_weight:
             self.__old_weights = self.weights
             self.weights = self.__old_weights - self.delta
