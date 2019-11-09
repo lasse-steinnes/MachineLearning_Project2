@@ -14,7 +14,7 @@ from helper_functions import load_terrain, normalize,matDesign
 reduction = 36 # Similar to project 1
 x,y,z = load_terrain('./Terraindata/yellowstone1', reduction)
 x,y,z = normalize(x,y,z) # normalize training, use to normalize
-p_order = np.linspace(0,130,131,dtype = int)
+p_order = np.linspace(0,130,130/5+1,dtype = int)
 
 toi = pd.DataFrame(columns=["number of layers", "nodes per layer",
                                         "epoch", "batch size",
