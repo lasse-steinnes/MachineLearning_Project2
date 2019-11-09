@@ -1,3 +1,9 @@
+'''
+script for running neural network for classificaiton problems specifically the 
+credit card data. the network parameters are set to the optimal hyperparameters.
+The K-fold cross validation method is used with test, train and validation splits.
+'''
+
 from Neural_Network import Neural_Network
 from helper_functions import parse_data
 import pandas as pd
@@ -6,16 +12,7 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-##defalut values
 
-#down sampling
-#momentum 0.9  <- James
-#lambda 1e-4   <- Lukas
-#epoch 100
-#eta 0.3     <-Lasse
-#batch size 50 -200     <- vary [50, 100, 150, 200]
-#topologies [23, 40, 2], [23, 40, 20, 2], [23, 40, 20, 10, 2], [23, 10, 20, 40, 2]
-#sigmoid/tanh all layers
 filename = "default of credit card clients.xls"
 df = pd.read_excel(filename, header=1)
 df = df.drop(columns=["ID"])
@@ -24,6 +21,7 @@ X = X[: ,1:]#drop cont column  from model
 onehot = OneHot()
 y_onehot = onehot.encoding(y)
 
+#shuffle the data before slicing into folds.
 curr_seed= 0
 np.random.seed(curr_seed)
 np.random.shuffle(X)
@@ -42,11 +40,7 @@ toi = pd.DataFrame(columns=["number of layers", "nodes per layer",
                                         "epoch", "batch size",
                                         "learning rate","initial learning rate","momentum parameter","lambda", "stopping tol",
                                          "cost", "accuracy", "data set"])
-
-#nn = Neural_Network([23,  40,       2], # For regression: [number of features, 1]
-#                         ['tanh',  'softmax'],
-#                    'mse', regularization=('l2', 1e-2))
-
+#initialisation of hyper parameters.
 eta = np.array([0.3])
 mini_batch_size = np.array([50])
 epochs = np.array([100])
@@ -68,6 +62,7 @@ for n in gamma:
                                         "learning rate","initial learning rate","momentum parameter","lambda", "stopping tol",
                                          "cost", "accuracy", "data set"])
                                 for s in range(0, kfold):
+                                    #indexing s for the test fold and t for the validation fold.
                                     t = s + 1
                                     if s == kfold-1:
                                         t = 1
@@ -78,9 +73,11 @@ for n in gamma:
                                     y_test  = y_folds[s] 
                                     y_validation = y_folds[t]
                                     
+                                    #initialise the network
                                     nn = Neural_Network(h, g,
                                                 'classification', regularization=('l2', 1e-2))
                                     
+                                    #train the network
                                     nn.training(X_train, y_train,
                                         k, mini_batch_size=i,
                                         eta = j, eta_schedule=('decay', 0.01),
@@ -88,16 +85,18 @@ for n in gamma:
                                         lmbd=m, tolerance=10**-4,
                                         test_data=(X_test, y_test),
                                         validation_data=(X_validation,y_validation))
-        
+                                    
+                                    #temporarily store the results in a table of information.
                                     temp = temp.append(nn.toi)
-                                    #print(temp)
+                                    
                                 # find the mean value of the cost and accuracy                                
                                 mean_temp = temp.groupby(["number of layers", "nodes per layer",
                                         "epoch", "batch size", "learning rate","initial learning rate",
                                         "momentum parameter","lambda", "stopping tol",
                                         "data set"], as_index = False).mean()
-                                print (mean_temp)
+                                #store the mean results
                                 toi = toi.append(mean_temp)
+                                #delete the temporary data
                                 del temp
                             else:
                                 
