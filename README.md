@@ -6,7 +6,7 @@ The folder Results contains the .csv files and figures produced for the report.
     The folder is further divided into LogReg (Logistic Regression Results),
                                        NeuralNetwork (Neural network classification results),
                                        NeuralNetworkReg (Neural network regression results)
-                                       The results folders also contain code vis_**.py for creating heatmaps to visual the collected information.
+                                       The results folders also contain code vis_*.py for creating heatmaps to visual the collected information.
                                        
 The folder Terraindata contains the .tif files for the regression problem.
 
@@ -14,9 +14,13 @@ The folder Reports contains the written report explaining the methods and result
 
 The remaining files in the repository are the codes created for the Logistic Regression and Neural Network and visualisation.
     LogisitcRegression.py contains the class for Logistic Regression for classification.
+    
     eval_log.py contains code for comparing Logistic regression and ScikitLearn.
+    
     Neural_Network.py contains the class for Neural Network for classification and regression.
+    
     OneHot.py contains the class for onehot encoding data.
+    
     SGD.py contains the class for Stocastic Gradient Descent, parts of this class are used by Neural Network and Logistic Regression.
     helper_functions.py contains functions for data preparation.
     nn_example.py contains code for running the neural network for classification problems. 
