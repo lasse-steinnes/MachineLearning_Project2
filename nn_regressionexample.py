@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 from helper_functions import load_terrain, normalize,matDesign
+from imageio import imread
 
 #############################
 #Neural Network for regression
@@ -14,7 +15,7 @@ from helper_functions import load_terrain, normalize,matDesign
 reduction = 36 # Similar to project 1
 x,y,z = load_terrain('./Terraindata/yellowstone1', reduction)
 x,y,z = normalize(x,y,z) # normalize training, use to normalize
-p_order = np.linspace(0,130,130/5+1,dtype = int)
+p_order = np.array([115])
 
 toi = pd.DataFrame(columns=["number of layers", "nodes per layer",
                                         "epoch", "batch size",
@@ -85,6 +86,7 @@ for order in p_order:
 
                                     toi = toi.append(mean_temp)
                                     del temp
+
                                 else:
 
                                     nn = Neural_Network(h, g,
@@ -98,5 +100,31 @@ for order in p_order:
                                             test_data=(X_test, y_test),validation_data = (X_val,y_val))
 
                                     toi = toi.append(nn.toi)
+#################################
+"""
+Visualising terrain and model output
+"""
+#################################
+z_model = nn.feedforward(X[:,1:].T)
+m = int(np.sqrt(len(z_model[0])))
+heights = z_model.reshape((m,m))
+
+plt.figure()
+ax1 = plt.subplot(122)
+ax1.set_title('NN:Regression | MSE = 1.70 E-03 \n p = 115; $\eta$ = 0.4')
+ax1.imshow(heights, cmap='viridis')
+ax1.set(xlabel='X', ylabel='Y')
+plt.axis('off')
+
+m1 = int(np.sqrt(len(z)))
+terrain = z.reshape((m1,m1))
+ax2 = plt.subplot(121)
+ax2.set_title('Processed data')
+ax2.imshow(terrain,cmap = 'viridis')
+ax2.set(xlabel='X', ylabel='Y')
+plt.axis('off')
+################################
+plt.savefig(fname ='./Results/NeuralNetworkReg/terrain_final.pdf', dpi='figure', format= 'pdf')
+plt.show()
 
 toi.to_csv('./Results/NeuralNetworkReg/nn.csv')
