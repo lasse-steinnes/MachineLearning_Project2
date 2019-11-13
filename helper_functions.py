@@ -46,16 +46,8 @@ def parse_data(df, target, power = 1, unbalanced = True):
     X = model(pre_X, power)
 
     return X, y
-'''
-# Downsampling
-def downsampling:
-#    Function to downsample data. This is a way of
-#    handling imbalanced classes, by reshaping data
-#    to 50 - 50 of both classes.
 
-    return downsampled
-'''
-# Loading the terrain data
+
 def load_terrain(imname, sel = 4): #select every fourth
     """
     This function loads the terrain data. The data
@@ -64,15 +56,7 @@ def load_terrain(imname, sel = 4): #select every fourth
     and x,y pixel index.
     """
     terrain = imread('{:}.tif'.format(imname))
-    # Show the terrain
-    """
-    plt.figure()
-    plt.title(imname)
-    plt.imshow(terrain, cmap='gray')
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.show()
-    """
+
     #reducing terrain data
     N = len(terrain[0,::sel]) # length reduced columns
     n = len(terrain[::sel,0]) # length reduced rows
@@ -108,10 +92,11 @@ def normalize(x,y,z, rescale = True):
     return x,y,z
 
 def matDesign (x , y, order, indVariables = 2):
-        '''This is a function to set up the design matrix
+        '''
+        This is a function to set up the design matrix
         the inputs are :dataSet, the n datapoints, x and y data in a nx2 matrix
-                        order, is the order of the coefficients,
-                        indVariables, the number of independant variables
+        order, is the order of the coefficients,
+        indVariables, the number of independant variables
         the outputs are X
         '''
 
@@ -136,7 +121,11 @@ def matDesign (x , y, order, indVariables = 2):
 
 def downsampler(data,target):
     '''
-    Downsamples the data and target
+    Downsamples the data and target.
+    Function to downsample data. This is a way of
+    handling imbalanced classes, by reshaping data
+    to 50 - 50 of both classes.
+    Returna downsampled data and target
     '''
     i_C1 = np.where(target > 0)[0]; i_C0 = np.where(target < 1)[0]
     n_C1 = len(i_C1)

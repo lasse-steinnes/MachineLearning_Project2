@@ -1,3 +1,9 @@
+'''
+script for running neural network for regularization problems. The specific run is for terraindata,
+which is downloaded from a GeoTIF-file. The network parameters are set to the optimal hyperparameters.
+The K-fold cross validation method is used with test, train and validation splits.
+'''
+
 from Neural_Network import Neural_Network
 from helper_functions import parse_data
 import pandas as pd
@@ -9,12 +15,9 @@ import numpy as np
 from helper_functions import load_terrain, normalize,matDesign
 from imageio import imread
 
-#############################
-#Neural Network for regression
-#############################
-reduction = 36 # Similar to project 1
+reduction = 36
 x,y,z = load_terrain('./Terraindata/yellowstone1', reduction)
-x,y,z = normalize(x,y,z) # normalize training, use to normalize
+x,y,z = normalize(x,y,z) # normalize training
 p_order = np.array([115])
 
 toi = pd.DataFrame(columns=["number of layers", "nodes per layer",
@@ -32,7 +35,7 @@ kfold = 10
 functions = np.array(['tanh', 'sigmoid'])
 
 for order in p_order:
-    X = matDesign(x,y, order) # Design matrix, should test for several different orders
+    X = matDesign(x,y, order) # Design matrix
     l1 = len(X[0,1:])
     layers = np.array([[l1,40,1]])
 
@@ -76,9 +79,6 @@ for order in p_order:
                                                 test_data=(X_test, y_test),validation_data = (X_val,y_val))
                                         temp = temp.append(nn.toi)
 
-                                    #print(temp)
-                                # find the mean value of the cost and accuracy
-
                                     mean_temp = temp.groupby(["number of layers", "nodes per layer",
                                         "epoch", "batch size", "learning rate","initial learning rate",
                                         "momentum parameter","lambda", "stopping tol",
@@ -100,11 +100,11 @@ for order in p_order:
                                             test_data=(X_test, y_test),validation_data = (X_val,y_val))
 
                                     toi = toi.append(nn.toi)
-#################################
+
 """
 Visualising terrain and model output
 """
-#################################
+
 z_model = nn.feedforward(X[:,1:].T)
 m = int(np.sqrt(len(z_model[0])))
 heights = z_model.reshape((m,m))
