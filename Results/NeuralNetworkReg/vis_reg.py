@@ -1,6 +1,6 @@
 """
-script to viwsulaize the toi for a nn with variation in hyperparameter
-usage: python vis_nn.py filename str(parameter to vary)
+script to visulaize the toi for a nn with variation in hyperparameter
+usage: python vis_reg.py filename str(parameter to vary)
 """
 import numpy as np
 import pandas as pd
